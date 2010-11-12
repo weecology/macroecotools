@@ -42,7 +42,7 @@ def plot_multiple_rads(list_of_abund_vectors):
     #     Currently would treat each value as a full abundance vector
     #     Could then change this to plot_rads and get rid of plot_rad
     plt.figure()
-    line_styles = ['bo-', 'ro-', 'ko-', 'go']
+    line_styles = ['bo-', 'ro-', 'ko-', 'go-', 'bx--', 'rx--', 'kx--', 'gx--']
     num_styles = len(line_styles)
     plt.hold(True)
     for (style, Ns) in enumerate(list_of_abund_vectors):
