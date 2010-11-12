@@ -17,17 +17,6 @@ def get_rad_from_cdf(cdf, S):
     cdf evaluated at 1 / S * (Rank - 0.5) to the nearest integer
     
     """
-    # TODO:
-    #   needs to be tested
-    #   think about the fact that rounding 
-    assert type(S) is int, "S must be an integer"
-    assert S > 0, "S must be greater than 0"
-    
-    Ns = []
-    ranks = range(1, S+1)
-    for rank in ranks:
-        Ns.append(cdf(1 / S * (rank - 0.5)))
-    return [ranks, Ns]
 
 def plot_rad(Ns):
     """Plot a rank-abundance distribution based on a vector of abundances"""
