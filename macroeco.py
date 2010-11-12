@@ -1,5 +1,9 @@
 """Module for conducting standard macroecological plots and analyses"""
 
+from __future__ import division
+import numpy as np
+import matplotlib.pyplot as plt
+
 def get_rad_from_cdf(cdf, S):
     """Return a predicted rank-abundance distribution from a theoretical CDF
     
@@ -13,6 +17,17 @@ def get_rad_from_cdf(cdf, S):
     cdf evaluated at 1 / S * (Rank - 0.5) to the nearest integer
     
     """
+    # TODO:
+    #   needs to be tested
+    #   think about the fact that rounding 
+    assert type(S) is int, "S must be an integer"
+    assert S > 0, "S must be greater than 0"
+    
+    Ns = []
+    ranks = range(1, S+1)
+    for rank in ranks:
+        Ns.append(cdf(1 / S * (rank - 0.5)))
+    return [ranks, Ns]
 
 def plot_rad(Ns):
     """Plot a rank-abundance distribution based on a vector of abundances"""
@@ -22,9 +37,31 @@ def plot_rad(Ns):
     plt.xlabel('Rank')
     plt.ylabel('Abundance')
     plt.show()
+
+def get_rad_data(Ns):
+    """Provide ranks and relative abundances for a vector of abundances"""
+    Ns = np.array(Ns)
+    Ns_sorted = -1 * np.sort(-1 * Ns)
+    relab_sorted = Ns_sorted / sum(Ns_sorted)
+    rank = range(1, len(Ns) + 1)
+    return (rank, relab_sorted)
     
 def plot_multiple_rads(list_of_abund_vectors):
     """Plots multiple rank-abundance distributions on a single plot"""
-    #plot first RAD using plot_rad
-    #hold on
-    #loop over remaining abudnances vectors plotting as new lines on existing plot
+    #TO DO:
+    #  Allow this function to handle a single abundance vector
+    #     Currently would treat each value as a full abundance vector
+    #     Could then change this to plot_rads and get rid of plot_rad
+    plt.figure()
+    line_styles = ['bo-', 'ro-', 'ko-', 'go']
+    num_styles = len(line_styles)
+    plt.hold(True)
+    for (style, Ns) in enumerate(list_of_abund_vectors):
+        (rank, relab) = get_rad_data(Ns)
+        #Plot line rotating through line_styles and starting at the beginning
+        #of line_styles again when all values have been used
+        plt.semilogy(rank, relab, line_styles[style % num_styles])
+    plt.hold(False)
+    plt.xlabel('Rank')
+    plt.ylabel('Abundance')
+    plt.show()
