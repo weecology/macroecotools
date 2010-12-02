@@ -3,6 +3,7 @@
 from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
+import colorsys
 
 def get_rad_from_cdf(cdf, S):
     """Return a predicted rank-abundance distribution from a theoretical CDF
@@ -53,4 +54,22 @@ def plot_multiple_rads(list_of_abund_vectors):
     plt.hold(False)
     plt.xlabel('Rank')
     plt.ylabel('Abundance')
+    plt.show()
+    
+def plot_SARs(list_of_A_and_S):
+    """Plot multiple SARs on a single plot. 
+    
+    Input: a list of lists, each sublist contains one vector for S and one vector for N.
+    Output: a graph with SARs plotted on log-log scale, with colors spanning the spectrum.
+    
+    """
+    N = len(list_of_A_and_S)
+    HSV_tuples = [(x * 1.0 / N, 0.5, 0.5) for x in range(N)]
+    RGB_tuples = map(lambda x: colorsys.hsv_to_rgb(*x), HSV_tuples)
+    for i in range(len(list_of_A_and_S)):
+        sublist = list_of_A_and_S[i]
+        plt.loglog(sublist[0], sublist[1], color = RGB_tuples[i])
+    plt.hold(False)
+    plt.xlabel('Area')
+    plt.ylabel('Richness')
     plt.show()
