@@ -59,7 +59,7 @@ def plot_multiple_rads(list_of_abund_vectors):
 def plot_SARs(list_of_A_and_S):
     """Plot multiple SARs on a single plot. 
     
-    Input: a list of lists, each sublist contains one vector for S and one vector for N.
+    Input: a list of lists, each sublist contains one vector for S and one vector for A.
     Output: a graph with SARs plotted on log-log scale, with colors spanning the spectrum.
     
     """
