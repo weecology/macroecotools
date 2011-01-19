@@ -97,7 +97,7 @@ def pln_ll(mu,sigma,ab):
     ll = sum(term1)[0] - term2[0]
     return ll[0]
 
-def logser_ll(x, p)
+def logser_ll(x, p):
     """Log-likelihood of a logseries distribution
     
     x  -  quantiles
