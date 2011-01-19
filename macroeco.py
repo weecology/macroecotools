@@ -78,18 +78,24 @@ def plot_bivar_color_by_pt_density_relation(x, y, radius, loglog=0):
     """Plot bivariate relationships with large n using color for point density
     
     """
-    #1. Identify unique points
-    #2. Loop over upoints counting total number of data points within radius r
-    #3. Sort upoints & # of points by # of points (high # points are last)
+    #TO DO
     #4. plot graph coloring points using color ramp based on # of points
-    data = np.array([x, y])
-    data = data.transpose()
+    raw_data = np.array([x, y])
+    raw_data = raw_data.transpose()
     
-    # Get unique points by finding unique rows in data matrix
-    # Uses the method described here (which I don't yet understand):
-    # http://mail.scipy.org/pipermail/numpy-discussion/2009-August/044664.html
-    unique_points = np.unique1d(data.view([('', data.dtype)] * data.shape[1])).view(data.dtype).reshape(-1,data.shape[1])
+    # Get unique data points by adding each pair of points to a set
+    unique_points = set()
+    for xval, yval in raw_data:
+        unique_points.add((xval, yval))
     
+    plot_data = []
     for a, b in unique_points:
-        pts_within_radius = x[((x - a) ** 2 + (y - b) ** 2) <= radius ** 2]
-        number_points_within_r = len(pts_within_radius)
+        num_neighbors = len(x[((x - a) ** 2 + (y - b) ** 2) <= radius ** 2])
+        plot_data.append((a, b, num_neighbors))
+    
+    sorted_plot_data = sorted(plot_data, key=lambda point: point[2])
+    if loglog == 1:
+        plt.loglog(x_unique, y_unique, 'bo')
+    else:
+        plt.plot(x_unique, y_unique, 'bo')
+    plt.show()
