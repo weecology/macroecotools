@@ -2,7 +2,7 @@
 
 from math import factorial
 from numpy import array, exp, histogram, log, matlib, sort, sqrt, pi
-from scipy import integrate
+from scipy import integrate, stats
 
 def pln_lik(mu,sigma,ab,approx_cut = 10):
     """Probability function of the Poisson lognormal distribution
@@ -96,3 +96,12 @@ def pln_ll(mu,sigma,ab):
                                     dtype = float))
     ll = sum(term1)[0] - term2[0]
     return ll[0]
+
+def logser_ll(x, p)
+    """Log-likelihood of a logseries distribution
+    
+    x  -  quantiles
+    p  -  lower or upper tail probability 
+    
+    """
+    return sum(log(stats.logser.pmf(x, p)))
