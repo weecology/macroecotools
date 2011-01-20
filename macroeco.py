@@ -4,6 +4,7 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 import colorsys
+from numpy import log10
 
 def get_rad_from_cdf(cdf, S):
     """Return a predicted rank-abundance distribution from a theoretical CDF
@@ -89,9 +90,16 @@ def plot_bivar_color_by_pt_density_relation(x, y, radius, loglog=0):
     for a, b in unique_points:
         num_neighbors = len(x[((x - a) ** 2 + (y - b) ** 2) <= radius ** 2])
         plot_data.append((a, b, num_neighbors))
-    
     sorted_plot_data = np.array(sorted(plot_data, key=lambda point: point[2]))
+    
+    plot_obj = plt.subplot(111)
     if loglog == 1:
-        plt.loglog(sorted_plot_data[:, 0], sorted_plot_data[:, 1], 'bo')
+        plot_obj.set_xscale('log')
+        plot_obj.set_yscale('log')
+        plot_obj.scatter(sorted_plot_data[:, 0], sorted_plot_data[:, 1],
+                         c = sorted_plot_data[:, 2])
+        plot_obj.set_xlim(min(x) * 0.5, max(x) * 2)
+        plot_obj.set_ylim(min(y) * 0.5, max(y) * 2)
     else:
-        plt.plot(sorted_plot_data[:, 0], sorted_plot_data[:, 1], 'bo')
+        plt.scatter(sorted_plot_data[:, 0], sorted_plot_data[:, 1],
+                    c = sorted_plot_data[:, 2])
