@@ -75,6 +75,17 @@ def plot_SARs(list_of_A_and_S):
 def plot_bivar_color_by_pt_density_relation(x, y, radius, loglog=0):
     """Plot bivariate relationships with large n using color for point density
     
+    Inputs:
+    x & y -- variables to be plotted
+    radius -- the linear distance within which to count points as neighbors
+    loglog -- a flag to indicate the use of a loglog plot (loglog = 1)
+    
+    The color of each point in the plot is determined by the logarithm (base 10)
+    of the number of points that occur with a given radius of the focal point,
+    with hotter colors indicating more points. The number of neighboring points
+    is determined in linear space regardless of whether a loglog plot is
+    presented.
+
     """
     raw_data = np.array([x, y])
     raw_data = raw_data.transpose()
