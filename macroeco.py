@@ -76,8 +76,6 @@ def plot_bivar_color_by_pt_density_relation(x, y, radius, loglog=0):
     """Plot bivariate relationships with large n using color for point density
     
     """
-    #TO DO
-    #4. plot graph coloring points using color ramp based on # of points
     raw_data = np.array([x, y])
     raw_data = raw_data.transpose()
     
