@@ -26,7 +26,6 @@ def plot_rad(Ns):
     plt.plot(rank, Ns, 'bo-')
     plt.xlabel('Rank')
     plt.ylabel('Abundance')
-    plt.show()
 
 def get_rad_data(Ns):
     """Provide ranks and relative abundances for a vector of abundances"""
@@ -54,7 +53,6 @@ def plot_multiple_rads(list_of_abund_vectors):
     plt.hold(False)
     plt.xlabel('Rank')
     plt.ylabel('Abundance')
-    plt.show()
     
 def plot_SARs(list_of_A_and_S):
     """Plot multiple SARs on a single plot. 
@@ -72,7 +70,6 @@ def plot_SARs(list_of_A_and_S):
     plt.hold(False)
     plt.xlabel('Area')
     plt.ylabel('Richness')
-    plt.show()
 
 def plot_bivar_color_by_pt_density_relation(x, y, radius, loglog=0):
     """Plot bivariate relationships with large n using color for point density
@@ -98,4 +95,3 @@ def plot_bivar_color_by_pt_density_relation(x, y, radius, loglog=0):
         plt.loglog(sorted_plot_data[:, 0], sorted_plot_data[:, 1], 'bo')
     else:
         plt.plot(sorted_plot_data[:, 0], sorted_plot_data[:, 1], 'bo')
-    plt.show()
