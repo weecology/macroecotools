@@ -97,7 +97,11 @@ def plot_bivar_color_by_pt_density_relation(x, y, radius, loglog=0):
     
     plot_data = []
     for a, b in unique_points:
-        num_neighbors = len(x[((x - a) ** 2 + (y - b) ** 2) <= radius ** 2])
+        if loglog == 1:
+            num_neighbors = len(x[((log10(x) - log10(a)) ** 2 +
+                                   (log10(y) - log10(b)) ** 2) <= log10(radius) ** 2])
+        else:        
+            num_neighbors = len(x[((x - a) ** 2 + (y - b) ** 2) <= radius ** 2])
         plot_data.append((a, b, num_neighbors))
     sorted_plot_data = np.array(sorted(plot_data, key=lambda point: point[2]))
     
