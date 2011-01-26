@@ -71,6 +71,25 @@ def plot_SARs(list_of_A_and_S):
     plt.hold(False)
     plt.xlabel('Area')
     plt.ylabel('Richness')
+    
+def count_pts_within_radius(x, y, radius, logscale=0):
+    raw_data = np.array([x, y])
+    raw_data = raw_data.transpose()
+    
+    # Get unique data points by adding each pair of points to a set
+    unique_points = set()
+    for xval, yval in raw_data:
+        unique_points.add((xval, yval))
+    
+    count_data = []
+    for a, b in unique_points:
+        if logscale == 1:
+            num_neighbors = len(x[((log10(x) - log10(a)) ** 2 +
+                                   (log10(y) - log10(b)) ** 2) <= log10(radius) ** 2])
+        else:        
+            num_neighbors = len(x[((x - a) ** 2 + (y - b) ** 2) <= radius ** 2])
+        count_data.append((a, b, num_neighbors))
+    return count_data
 
 def plot_bivar_color_by_pt_density_relation(x, y, radius, loglog=0):
     """Plot bivariate relationships with large n using color for point density
@@ -87,24 +106,8 @@ def plot_bivar_color_by_pt_density_relation(x, y, radius, loglog=0):
     presented.
 
     """
-    raw_data = np.array([x, y])
-    raw_data = raw_data.transpose()
-    
-    # Get unique data points by adding each pair of points to a set
-    unique_points = set()
-    for xval, yval in raw_data:
-        unique_points.add((xval, yval))
-    
-    plot_data = []
-    for a, b in unique_points:
-        if loglog == 1:
-            num_neighbors = len(x[((log10(x) - log10(a)) ** 2 +
-                                   (log10(y) - log10(b)) ** 2) <= log10(radius) ** 2])
-        else:        
-            num_neighbors = len(x[((x - a) ** 2 + (y - b) ** 2) <= radius ** 2])
-        plot_data.append((a, b, num_neighbors))
+    plot_data = count_pts_within_radius(x, y, radius, loglog)
     sorted_plot_data = np.array(sorted(plot_data, key=lambda point: point[2]))
-    
     plot_obj = plt.subplot(111)
     if loglog == 1:
         plot_obj.set_xscale('log')
