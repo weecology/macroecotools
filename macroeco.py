@@ -108,7 +108,7 @@ def plot_bivar_color_by_pt_density_relation(x, y, radius, loglog=0):
     """
     plot_data = count_pts_within_radius(x, y, radius, loglog)
     sorted_plot_data = np.array(sorted(plot_data, key=lambda point: point[2]))
-    plot_obj = plt.subplot(111)
+    plot_obj = plt.axes()
     if loglog == 1:
         plot_obj.set_xscale('log')
         plot_obj.set_yscale('log')
