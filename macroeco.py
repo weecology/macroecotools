@@ -4,6 +4,7 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 import colorsys
+import convhull
 from numpy import log10
 
 def get_rad_from_cdf(cdf, S):
@@ -120,3 +121,19 @@ def plot_bivar_color_by_pt_density_relation(x, y, radius, loglog=0):
         plot_obj.scatter(sorted_plot_data[:, 0], sorted_plot_data[:, 1],
                     c = log10(sorted_plot_data[:, 2]), faceted=False)
     return plot_obj
+
+def confidence_hull(x, y, radius, confidence_int = 0.95, logscale=0):
+    count_data = count_pts_within_radius(x, y, radius, logscale)
+    sorted_count_data = np.array(sorted(count_data, key=lambda point: point[2], reverse=True))
+    total_count = sum(sorted_count_data[:, 2])
+    cum_proportion_of_counts = (np.cumsum(sorted_count_data[:, 2], axis=0) /
+                                    total_count)
+    sorted_points = sorted_count_data[:, 0:2]
+    confidence_points = sorted_points[cum_proportion_of_counts <= confidence_int]
+    hull_points = convhull.convex_hull(confidence_points.transpose(), graphic = False)
+    plot_points = np.vstack([hull_points, hull_points[0, :]])
+    if logscale == 1:
+        plt.loglog(plot_points[:,0], plot_points[:,1])
+    else:
+        plt.plot(plot_points[:,0], plot_points[:,1])
+    return hull_points
