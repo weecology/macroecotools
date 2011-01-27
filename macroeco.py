@@ -125,7 +125,8 @@ def plot_color_by_pt_dens(x, y, radius, loglog=0):
                     c = log10(sorted_plot_data[:, 2]), faceted=False)
     return plot_obj
 
-def confidence_hull(x, y, radius, confidence_int = 0.95, logscale=0, linestyle='k-'):
+def confidence_hull(x, y, radius, confidence_int = 0.95, logscale=0, color='b',
+                    alpha=0.5):
     count_data = count_pts_within_radius(x, y, radius, logscale)
     sorted_count_data = np.array(sorted(count_data, key=lambda point: point[2], reverse=True))
     total_count = sum(sorted_count_data[:, 2])
@@ -135,8 +136,11 @@ def confidence_hull(x, y, radius, confidence_int = 0.95, logscale=0, linestyle='
     confidence_points = sorted_points[cum_proportion_of_counts <= confidence_int]
     hull_points = convhull.convex_hull(confidence_points.transpose(), graphic = False)
     plot_points = np.vstack([hull_points, hull_points[0, :]])
-    if logscale == 1:
-        plt.loglog(plot_points[:,0], plot_points[:,1], linestyle)
+    plot_obj = plt.axes()
+    if logscale == 1:        
+        plot_obj.set_xscale('log')
+        plot_obj.set_yscale('log')
+        plot_obj.fill(plot_points[:,0], plot_points[:,1], color, alpha=alpha)
     else:
-        plt.plot(plot_points[:,0], plot_points[:,1], linestyle)
+        plot_obj.fill(plot_points[:,0], plot_points[:,1], color, alpha=alpha)
     return hull_points
