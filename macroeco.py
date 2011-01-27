@@ -92,7 +92,7 @@ def count_pts_within_radius(x, y, radius, logscale=0):
         count_data.append((a, b, num_neighbors))
     return count_data
 
-def plot_bivar_color_by_pt_density_relation(x, y, radius, loglog=0):
+def plot_color_by_pt_dens(x, y, radius, loglog=0):
     """Plot bivariate relationships with large n using color for point density
     
     Inputs:
