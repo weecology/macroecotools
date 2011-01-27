@@ -74,6 +74,9 @@ def plot_SARs(list_of_A_and_S):
     plt.ylabel('Richness')
     
 def count_pts_within_radius(x, y, radius, logscale=0):
+    #TODO: see if we can improve performance using KDTree.query_ball_point
+    #http://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.KDTree.query_ball_point.html
+    #instead of doing the subset based on the circle
     raw_data = np.array([x, y])
     raw_data = raw_data.transpose()
     
