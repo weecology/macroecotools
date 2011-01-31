@@ -152,8 +152,6 @@ def e_var(abundance_data):
     abundance_data = list of abundance fo all species in a community
     
     """
-    abundance_data = (1000, 1000, 1000, 1)
-
     S = len(abundance_data)
     ln_nj_over_S=[]
     for i in range(0, S):
