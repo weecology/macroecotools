@@ -95,7 +95,7 @@ def count_pts_within_radius(x, y, radius, logscale=0):
         count_data.append((a, b, num_neighbors))
     return count_data
 
-def plot_color_by_pt_dens(x, y, radius, loglog=0):
+def plot_color_by_pt_dens(x, y, radius, loglog=0, plot_obj=plt.axes()):
     """Plot bivariate relationships with large n using color for point density
     
     Inputs:
@@ -112,7 +112,7 @@ def plot_color_by_pt_dens(x, y, radius, loglog=0):
     """
     plot_data = count_pts_within_radius(x, y, radius, loglog)
     sorted_plot_data = np.array(sorted(plot_data, key=lambda point: point[2]))
-    plot_obj = plt.axes()
+    
     if loglog == 1:
         plot_obj.set_xscale('log')
         plot_obj.set_yscale('log')
@@ -144,3 +144,25 @@ def confidence_hull(x, y, radius, confidence_int = 0.95, logscale=0, color='b',
     else:
         plot_obj.fill(plot_points[:,0], plot_points[:,1], color, alpha=alpha)
     return hull_points
+
+def e_var(abundance_data):
+    """Calculate Smith and Wilson's (1996; Oikos 76:70-82) evenness index (Evar)
+    
+    Input:
+    abundance_data = list of abundance fo all species in a community
+    
+    """
+    abundance_data = (1000, 1000, 1000, 1)
+
+    S = len(abundance_data)
+    ln_nj_over_S=[]
+    for i in range(0, S):
+        v1 = (np.log(abundance_data[i]))/S
+        ln_nj_over_S.append(v1)     
+    
+    ln_ni_minus_above=[]
+    for i in range(0, S):
+        v2 = ((np.log(abundance_data[i])) - sum(ln_nj_over_S)) ** 2
+        ln_ni_minus_above.append(v2)
+        
+    return(1 - ((2 / np.pi) * np.arctan(sum(ln_ni_minus_above) / S)))
