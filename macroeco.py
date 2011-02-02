@@ -164,3 +164,7 @@ def e_var(abundance_data):
         ln_ni_minus_above.append(v2)
         
     return(1 - ((2 / np.pi) * np.arctan(sum(ln_ni_minus_above) / S)))
+
+def obs_pred_rsquare(obs, pred):
+    """Determines the prop of variability in a data set accounted for by a model"""
+    return 1 - sum((obs - pred) ** 2) / sum((obs - np.mean(obs)) ** 2)
