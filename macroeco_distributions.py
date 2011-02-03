@@ -105,3 +105,8 @@ def logser_ll(x, p):
     
     """
     return sum(log(stats.logser.pmf(x, p)))
+
+def disunif_ll(ab, low, high):
+    """Log-likelihood of a discrete uniform distribution with bounds [low, high]"""
+    n = len(ab)
+    return sum(n * log(1 / (high - low + 1)))
