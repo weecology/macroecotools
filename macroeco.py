@@ -117,7 +117,7 @@ def plot_color_by_pt_dens(x, y, radius, loglog=0, plot_obj=plt.axes()):
         plot_obj.set_xscale('log')
         plot_obj.set_yscale('log')
         plot_obj.scatter(sorted_plot_data[:, 0], sorted_plot_data[:, 1],
-                         c = log10(sorted_plot_data[:, 2]), faceted=False)
+                         c = np.sqrt(sorted_plot_data[:, 2]), faceted=False)
         plot_obj.set_xlim(min(x) * 0.5, max(x) * 2)
         plot_obj.set_ylim(min(y) * 0.5, max(y) * 2)
     else:
