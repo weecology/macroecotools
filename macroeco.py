@@ -37,24 +37,26 @@ def get_rad_data(Ns):
     rank = range(1, len(Ns) + 1)
     return (rank, relab_sorted)
     
-def plot_multiple_rads(list_of_abund_vectors):
+def plot_multiple_rads(list_of_abund_vectors, labels):
     """Plots multiple rank-abundance distributions on a single plot"""
     #TO DO:
     #  Allow this function to handle a single abundance vector
     #     Currently would treat each value as a full abundance vector
     #     Could then change this to plot_rads and get rid of plot_rad
     plt.figure()
-    line_styles = ['bo-', 'ro-', 'ko-', 'go-', 'bx--', 'rx--', 'kx--', 'gx--']
+    line_styles = ['go-', 'ro-', 'bo-', 'ko-', 'go-', 'bx--', 'rx--', 'kx--', 'gx--']
     num_styles = len(line_styles)
     plt.hold(True)
     for (style, Ns) in enumerate(list_of_abund_vectors):
         (rank, relab) = get_rad_data(Ns)
         #Plot line rotating through line_styles and starting at the beginning
         #of line_styles again when all values have been used
-        plt.semilogy(rank, relab, line_styles[style % num_styles])
+        plt.semilogy(rank, relab, line_styles[style % num_styles],
+                     linewidth=2, markersize=10, label=labels[style])
     plt.hold(False)
     plt.xlabel('Rank')
     plt.ylabel('Abundance')
+    plt.legend()
     
 def plot_SARs(list_of_A_and_S):
     """Plot multiple SARs on a single plot. 
