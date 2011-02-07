@@ -97,7 +97,7 @@ def count_pts_within_radius(x, y, radius, logscale=0):
         count_data.append((a, b, num_neighbors))
     return count_data
 
-def plot_color_by_pt_dens(x, y, radius, loglog=0, plot_obj=plt.axes()):
+def plot_color_by_pt_dens(x, y, radius, loglog=0, plot_obj=None):
     """Plot bivariate relationships with large n using color for point density
     
     Inputs:
@@ -115,6 +115,9 @@ def plot_color_by_pt_dens(x, y, radius, loglog=0, plot_obj=plt.axes()):
     plot_data = count_pts_within_radius(x, y, radius, loglog)
     sorted_plot_data = np.array(sorted(plot_data, key=lambda point: point[2]))
     
+    if plot_obj == None:
+        plot_obj = plt.axes()
+        
     if loglog == 1:
         plot_obj.set_xscale('log')
         plot_obj.set_yscale('log')
