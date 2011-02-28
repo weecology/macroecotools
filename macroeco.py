@@ -185,9 +185,9 @@ def comp_ed (spdata1,abdata1,spdata2,abdata2):
     intersect12 = set(spdata1).intersection(spdata2)
     setdiff12 = np.setdiff1d(spdata1,spdata2)
     setdiff21 = np.setdiff1d(spdata2,spdata1)
-    relab1 = np.concatenate(((list(abdata1[np.in1d(spdata1,list(intersect12)) == 1])),
-                   list(abdata1[np.in1d(spdata1,list(setdiff12))]),
-                   list(np.zeros(len(setdiff21)))))
+    relab1 = np.concatenate(((abdata1[np.in1d(spdata1,list(intersect12)) == 1]),
+                             abdata1[np.in1d(spdata1,setdiff12)], 
+                             np.zeros(len(setdiff21))))
     relab2 = np.concatenate((abdata2[np.in1d(spdata2,list(intersect12)) == 1],
                               np.zeros(len(setdiff12)),
                               abdata2[np.in1d(spdata2,setdiff21)]))
