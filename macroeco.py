@@ -185,10 +185,35 @@ def comp_ed (spdata1,abdata1,spdata2,abdata2):
     intersect12 = set(spdata1).intersection(spdata2)
     setdiff12 = np.setdiff1d(spdata1,spdata2)
     setdiff21 = np.setdiff1d(spdata2,spdata1)
-    relab1 = np.concatenate(((abdata1[np.in1d(spdata1,list(intersect12)) == 1]),
-                             abdata1[np.in1d(spdata1,setdiff12)], 
+    relab1 = np.concatenate(((abdata1[np.setmember1d(spdata1,list(intersect12)) == 1]),
+                             abdata1[np.setmember1d(spdata1,setdiff12)], 
                              np.zeros(len(setdiff21))))
-    relab2 = np.concatenate((abdata2[np.in1d(spdata2,list(intersect12)) == 1],
+    relab2 = np.concatenate((abdata2[np.setmember1d(spdata2,list(intersect12)) == 1],
                               np.zeros(len(setdiff12)),
-                              abdata2[np.in1d(spdata2,setdiff21)]))
+                              abdata2[np.setmember1d(spdata2,setdiff21)]))
     return np.sqrt(sum((relab1 - relab2) ** 2))
+
+def calc_comp_eds(ifile, fout, cutoff = 9):
+    """Calculate Euclidean distances in species composition & save to file
+
+    Inputs:
+    ifile -- ifile = np.genfromtxt(input_filename, dtype = "S15,S15,i8", 
+                   names = ['site','species','ab'], delimiter = ",")
+    fout -- fout = csv.writer(open(output_filename,'ab'))
+    cutoff --  minimum number of species required to run - 1
+    
+    """
+    usites = np.sort(list(set(ifile["site"]))) 
+
+    for i in range (0, len(usites)-1):       
+        spdata1 = ifile["species"][ifile["site"] == usites[i]]
+        abdata1 = ifile["ab"][ifile["site"] == usites[i]]
+        
+        for a in range (i+1,len(usites)):  
+            spdata2 = ifile["species"][ifile["site"] == usites[a]]
+            abdata2 = ifile["ab"][ifile["site"] == usites[a]]   
+            
+            if len(spdata1) > cutoff and len(spdata2) > cutoff:
+                ed = macroeco.comp_ed (spdata1,abdata1,spdata2,abdata2)
+                results = np.column_stack((usites[i], usites[a], ed))
+                fout.writerows(results)
