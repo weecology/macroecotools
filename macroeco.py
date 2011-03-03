@@ -57,6 +57,14 @@ def plot_multiple_rads(list_of_abund_vectors, labels):
     plt.xlabel('Rank')
     plt.ylabel('Abundance')
     plt.legend()
+
+def preston_sad(abund_vector):
+    """Plot histogram of species abundances on a log2 scale"""
+    
+    q = np.exp2(list(range(0, 25)))    
+    b = q [(q <= max(abund_vector)*2)]    
+    hist_ab = np.histogram(abund_vector, bins = b)        
+    return hist_ab
     
 def plot_SARs(list_of_A_and_S):
     """Plot multiple SARs on a single plot. 
