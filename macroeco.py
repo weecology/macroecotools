@@ -217,6 +217,10 @@ def calc_comp_eds(ifile, fout, cutoff = 9):
     cutoff --  minimum number of species required to run - 1
     
     """
+    #TODO - Remove reliance on on names of columns in input
+    #       Possibly move to 3 1-D arrays for input rather than the 2-D with 3 columns
+    #       Return result rather than writing to file
+    
     usites = np.sort(list(set(ifile["site"]))) 
 
     for i in range (0, len(usites)-1):       
