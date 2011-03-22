@@ -58,11 +58,12 @@ def plot_multiple_rads(list_of_abund_vectors, labels):
     plt.ylabel('Abundance')
     plt.legend()
 
-def preston_sad(abund_vector, normalized = 'no'):
+def preston_sad(abund_vector, b=None, normalized = 'no'):
     """Plot histogram of species abundances on a log2 scale"""
+    if b == None:
+        q = np.exp2(list(range(0, 25)))    
+        b = q [(q <= max(abund_vector)*2)]
     
-    q = np.exp2(list(range(0, 25)))    
-    b = q [(q <= max(abund_vector)*2)]
     if normalized == 'no':
         hist_ab = np.histogram(abund_vector, bins = b)
     if normalized == 'yes':
