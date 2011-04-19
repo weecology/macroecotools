@@ -110,3 +110,7 @@ def disunif_ll(ab, low, high):
     """Log-likelihood of a discrete uniform distribution with bounds [low, high]"""
     n = len(ab)
     return n * log(1 / (high - low + 1))
+
+def geom_ll(ab, p):
+    """Log-likelihood of a geomtric distribution"""
+    return sum(log(stats.geom.pmf(ab, p)))
