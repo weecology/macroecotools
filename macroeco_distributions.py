@@ -1,8 +1,8 @@
 """Probability and Likelihood Functions for Distribution Testing"""
 
 from math import factorial
-from numpy import array, exp, histogram, log, matlib, sort, sqrt, pi
-from scipy import integrate, stats
+from numpy import array, exp, histogram, log, matlib, sort, sqrt, pi, std
+from scipy import integrate, stats, optimize
 
 def pln_lik(mu,sigma,ab,approx_cut = 10):
     """Probability function of the Poisson lognormal distribution
@@ -17,22 +17,22 @@ def pln_lik(mu,sigma,ab,approx_cut = 10):
    
     L = matlib.repmat(None, len(ab), 1)
     if mu <= 0 or sigma <= 0:
-        L = 1e-120 #very unlikely to have negative params
-        L.transpose()
-    for i in range (0, len(ab)):
-        ab1 = ab[i]
-        if ab1 > approx_cut:
+        L = matlib.repmat(1e-120, len(ab), 1) #very unlikely to have negative params
+    else:
+        for i in range (0, len(ab)):
+            ab1 = ab[i]
+            if ab1 > approx_cut:
             #use approximation for large abundances    
             #Bulmer equation 7
             #tested vs. integral below - matches to about 6 significant digits for
             #intermediate abundances (10-50) - integral fails for higher
             #abundances, approx fails for lower abundances - 
             #assume it gets better for abundance > 50
-            L[i,] = (1 / sqrt(2 * pi * sigma * sigma) / ab[i] * 
+                L[i,] = (1 / sqrt(2 * pi * sigma * sigma) / ab[i] * 
                 exp(-(log(ab[i]) - mu) ** 2 / (2 * sigma ** 2)) * 
                 (1 + 1 / (2 * ab[i] * sigma * sigma) * 
                  ((log(ab[i]) - mu) ** 2 / (sigma * sigma) + log(ab[i]) - mu - 1)))
-        else:
+            else:
             # Bulmer equation 2 -tested against Grundy Biometrika 38:427-434
             # Table 1 & Table 2 and matched to the 4 decimals in the table except
             # for very small mu (10^-2)
@@ -42,29 +42,29 @@ def pln_lik(mu,sigma,ab,approx_cut = 10):
             # peak apppears to be just below ab1 - for very small ab1 (ab1<10)
             # works better to leave entire peak in one integral and integrate 
             # the tail in the second integral           
-            if ab1 < 10:
-                ub = 10
-            else: 
-                ub = ab1       
-            term1 = ((2 * pi * sigma **2) ** -0.5)/ factorial(ab1)
+                if ab1 < 10:
+                    ub = 10
+                else: 
+                    ub = ab1       
+                term1 = ((2 * pi * sigma **2) ** -0.5)/ factorial(ab1)
             #integrate low end where peak is so it finds peak
-            term2a = integrate.quad(lambda x: ((x ** (ab1 - 1)) * 
+                term2a = integrate.quad(lambda x: ((x ** (ab1 - 1)) * 
                                                (exp(-x)) * 
                                                exp(-(log(x) - mu) ** 2 / 
                                                 (2 * sigma ** 2))), 0.00001, ub)
             #integrate higher end for accuracy and in case peak moves
-            term2b = integrate.quad(lambda x: ((x ** (ab1 - 1)) * 
+                term2b = integrate.quad(lambda x: ((x ** (ab1 - 1)) * 
                                                (exp(-x)) * exp(-(log(x) - mu) ** 
                                                                2/ (2 * sigma ** 
                                                                    2))), ub, 1e5)
-            Pr = term1 * term2a[0]
-            Pr_add = term1 * term2b[0]                
-            L[i,] = Pr + Pr_add            
+                Pr = term1 * term2a[0]
+                Pr_add = term1 * term2b[0]                
+                L[i,] = Pr + Pr_add            
             
-            if L[i,] <= 0:
+                if L[i,] <= 0:
                 #likelihood shouldn't really be zero and causes problem taking 
                 #log of it
-                L[i,] = 1e-120
+                    L[i,] = 1e-120
     return (L)
 
 def pln_ll(mu,sigma,ab):
@@ -96,6 +96,15 @@ def pln_ll(mu,sigma,ab):
                                     dtype = float))
     ll = sum(term1)[0] - term2[0]
     return ll[0]
+
+def pln_solver(ab):
+    """Given abundance data, solve for MLE of pln parameters mu and sigma"""
+    mu0 = sum(log(ab)) / len(ab)
+    sig0 = std(log(ab))
+    def pln_func(x): 
+        return -pln_ll(x[0], x[1], ab)
+    mu, sigma = optimize.fmin(pln_func, x0 = [mu0, sig0])
+    return mu, sigma
 
 def logser_ll(x, p):
     """Log-likelihood of a logseries distribution
