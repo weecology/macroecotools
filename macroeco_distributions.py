@@ -32,19 +32,19 @@ def pln_lik(mu,sigma,abund_vect,approx_cut = 10):
             #assume it gets better for abundance > 50
                 V = sigma ** 2
                 L[i,] = (1 / sqrt(2 * pi * V) / ab *
-                         exp(-(log(ab) - mu)** 2 / (2 * V)) *
-                         (1 + 1 / (2 * ab * V) * ((log(ab) - mu) ** 2 / (V) +
+                         exp(-(log(ab) - mu) ** 2 / (2 * V)) *
+                         (1 + 1 / (2 * ab * V) * ((log(ab) - mu) ** 2 / V +
                                                   log(ab) - mu - 1)))
             else:
             # Bulmer equation 2 -tested against Grundy Biometrika 38:427-434
             # Table 1 & Table 2 and matched to the 4 decimals in the table except
             # for very small mu (10^-2)
-            # having the /gamma(ab1+1) inside the integrand is inefficient but
-            # avoids pseudo-singularities            
+            # having the /gamma(ab+1) inside the integrand is inefficient but
+            # avoids pseudo-singularities        
             # split integral into two so the quad function finds the peak
-            # peak apppears to be just below ab1 - for very small ab1 (ab1<10)
+            # peak apppears to be just below ab - for very small ab (ab<10)
             # works better to leave entire peak in one integral and integrate 
-            # the tail in the second integral           
+            # the tail in the second integral
                 if ab < 10:
                     ub = 10
                 else: 
@@ -59,7 +59,7 @@ def pln_lik(mu,sigma,abund_vect,approx_cut = 10):
                 term2b = integrate.quad(lambda x: ((x ** (ab - 1)) * 
                                                (exp(-x)) * exp(-(log(x) - mu) ** 
                                                                2/ (2 * sigma ** 
-                                                                   2))), ub, 1e5)
+                                                                   2))), ub, float('inf'))
                 Pr = term1 * term2a[0]
                 Pr_add = term1 * term2b[0]                
                 L[i,] = Pr + Pr_add            
