@@ -54,7 +54,7 @@ def pln_lik(mu,sigma,abund_vect,approx_cut = 10):
                 term2a = integrate.quad(lambda x: ((x ** (ab - 1)) * 
                                                (exp(-x)) * 
                                                exp(-(log(x) - mu) ** 2 / 
-                                                (2 * sigma ** 2))), 0.00001, ub)
+                                                (2 * sigma ** 2))), 0, ub)
             #integrate higher end for accuracy and in case peak moves
                 term2b = integrate.quad(lambda x: ((x ** (ab - 1)) * 
                                                (exp(-x)) * exp(-(log(x) - mu) ** 
