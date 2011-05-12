@@ -1,10 +1,13 @@
 """Probability and Likelihood Functions for Distribution Testing"""
 
+from __future__ import division
 from math import factorial
-from numpy import array, exp, histogram, log, matlib, sort, sqrt, pi, std
+from numpy import array, exp, histogram, log, matlib, sort, sqrt, pi, std, mean
 from scipy import integrate, stats, optimize
 
-def pln_lik(mu,sigma,ab,approx_cut = 10):
+def pln_lik(mu,sigma,abund_vect,approx_cut = 10):
+    #TODO remove all use of matrices unless they are necessary for some
+    #     unforseen reason
     """Probability function of the Poisson lognormal distribution
     
     method derived from Bulmer 1974 Biometrics 30:101-110    
@@ -15,23 +18,23 @@ def pln_lik(mu,sigma,ab,approx_cut = 10):
     
     """
    
-    L = matlib.repmat(None, len(ab), 1)
+    L = matlib.repmat(None, len(abund_vect), 1)
     if mu <= 0 or sigma <= 0:
-        L = matlib.repmat(1e-120, len(ab), 1) #very unlikely to have negative params
+        L = matlib.repmat(1e-120, len(abund_vect), 1) #very unlikely to have negative params
     else:
-        for i in range (0, len(ab)):
-            ab1 = ab[i]
-            if ab1 > approx_cut:
+        for i, ab in enumerate(abund_vect):
+            if ab > approx_cut:
             #use approximation for large abundances    
             #Bulmer equation 7
             #tested vs. integral below - matches to about 6 significant digits for
             #intermediate abundances (10-50) - integral fails for higher
             #abundances, approx fails for lower abundances - 
             #assume it gets better for abundance > 50
-                L[i,] = (1 / sqrt(2 * pi * sigma * sigma) / ab[i] * 
-                exp(-(log(ab[i]) - mu) ** 2 / (2 * sigma ** 2)) * 
-                (1 + 1 / (2 * ab[i] * sigma * sigma) * 
-                 ((log(ab[i]) - mu) ** 2 / (sigma * sigma) + log(ab[i]) - mu - 1)))
+                V = sigma ** 2
+                L[i,] = (1 / sqrt(2 * pi * V) / ab *
+                         exp(-(log(ab) - mu)** 2 / (2 * V)) *
+                         (1 + 1 / (2 * ab * V) * ((log(ab) - mu) ** 2 / (V) +
+                                                  log(ab) - mu - 1)))
             else:
             # Bulmer equation 2 -tested against Grundy Biometrika 38:427-434
             # Table 1 & Table 2 and matched to the 4 decimals in the table except
@@ -42,18 +45,18 @@ def pln_lik(mu,sigma,ab,approx_cut = 10):
             # peak apppears to be just below ab1 - for very small ab1 (ab1<10)
             # works better to leave entire peak in one integral and integrate 
             # the tail in the second integral           
-                if ab1 < 10:
+                if ab < 10:
                     ub = 10
                 else: 
-                    ub = ab1       
-                term1 = ((2 * pi * sigma **2) ** -0.5)/ factorial(ab1)
+                    ub = ab       
+                term1 = ((2 * pi * sigma ** 2) ** -0.5)/ factorial(ab)
             #integrate low end where peak is so it finds peak
-                term2a = integrate.quad(lambda x: ((x ** (ab1 - 1)) * 
+                term2a = integrate.quad(lambda x: ((x ** (ab - 1)) * 
                                                (exp(-x)) * 
                                                exp(-(log(x) - mu) ** 2 / 
                                                 (2 * sigma ** 2))), 0.00001, ub)
             #integrate higher end for accuracy and in case peak moves
-                term2b = integrate.quad(lambda x: ((x ** (ab1 - 1)) * 
+                term2b = integrate.quad(lambda x: ((x ** (ab - 1)) * 
                                                (exp(-x)) * exp(-(log(x) - mu) ** 
                                                                2/ (2 * sigma ** 
                                                                    2))), ub, 1e5)
@@ -86,6 +89,9 @@ def pln_ll(mu,sigma,ab):
     
     cts = histogram(ab, bins = range(1, max(ab) + 2))
     counts = cts[0] 
+    #TODO This seems inefficient since it retrieves likelihoods that will just
+    #     be multiplied by zero and each likelihood requires numerical solns.
+    #     Probably why the implementation in R is so much faster.
     plik = log(array(pln_lik(mu, sigma, 
                              range(1, (len(cts[0]) + 1))), dtype = float))
     term1 = matlib.repmat(None, max(ab), 1)    
@@ -99,7 +105,7 @@ def pln_ll(mu,sigma,ab):
 
 def pln_solver(ab):
     """Given abundance data, solve for MLE of pln parameters mu and sigma"""
-    mu0 = sum(log(ab)) / len(ab)
+    mu0 = mean(log(ab))
     sig0 = std(log(ab))
     def pln_func(x): 
         return -pln_ll(x[0], x[1], ab)
