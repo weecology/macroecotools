@@ -1,8 +1,10 @@
 """Probability and Likelihood Functions for Distribution Testing"""
+#TODO convert from importing from numpy to importing numpy as np
 
 from __future__ import division
 from math import factorial
 from numpy import array, exp, histogram, log, matlib, sort, sqrt, pi, std, mean
+import numpy as np
 from scipy import integrate, stats, optimize
 
 def pln_lik(mu,sigma,abund_vect,approx_cut = 10):
@@ -88,19 +90,14 @@ def pln_ll(mu,sigma,ab):
     ab.sort()
     
     cts = histogram(ab, bins = range(1, max(ab) + 2))
-    counts = cts[0] 
-    #TODO This seems inefficient since it retrieves likelihoods that will just
-    #     be multiplied by zero and each likelihood requires numerical solns.
-    #     Probably why the implementation in R is so much faster.
-    plik = log(array(pln_lik(mu, sigma, 
-                             range(1, (len(cts[0]) + 1))), dtype = float))
-    term1 = matlib.repmat(None, max(ab), 1)    
-    for i in range(0, len(counts)):
-        term1[i,] = counts[i] * plik[i]
-    term2 = len(ab) * log(1 - array(pln_lik(mu, sigma, array(matlib.zeros((1,1)), 
-                                                           dtype = int)), 
-                                    dtype = float))
-    ll = sum(term1)[0] - term2[0]
+    observed_abund_vals = cts[1][cts[0] != 0]
+    counts = cts[0][cts[0] != 0]
+    plik = log(array(pln_lik(mu, sigma, observed_abund_vals), dtype = float))
+    term1 = array([], dtype = float)
+    for i, count in enumerate(counts):
+        term1 = np.append(term1, count * plik[i])
+    term2 = len(ab) * log(1 - array(pln_lik(mu, sigma, [0]), dtype = float))
+    ll = sum(term1) - term2
     return ll[0]
 
 def pln_solver(ab):
