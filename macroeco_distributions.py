@@ -127,6 +127,17 @@ def geom_ll(ab, p):
     """Log-likelihood of a geomtric distribution"""
     return sum(log(stats.geom.pmf(ab, p)))
 
-def negbin(ab, n, p):
+def negbin_ll(ab, n, p):
     """Log-likelihood of a negative binomial dstirbution (truncated at 1)"""
     return sum(log(stats.nbinom.pmf(ab, n, p) / (1 - stats.nbinom.pmf(0, n, p))))
+
+def negbin_solver(ab):
+    """Given abundance data, solve for MLE of negative binomial parameters n and p"""
+    mu = np.mean(ab)
+    sig = np.var(ab, ddof = 1)
+    p0 = 1 - mu / sig
+    n0 = mu * (1 - p0) / p0
+    def negbin_func(x): 
+        return -negbin_ll(ab, x[0], x[1])
+    n, p = optimize.fmin(negbin_func, x0 = [n0, p0])
+    return n, p
