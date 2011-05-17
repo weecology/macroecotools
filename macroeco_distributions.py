@@ -126,3 +126,7 @@ def disunif_ll(ab, low, high):
 def geom_ll(ab, p):
     """Log-likelihood of a geomtric distribution"""
     return sum(log(stats.geom.pmf(ab, p)))
+
+def negbin(ab, n, p):
+    """Log-likelihood of a negative binomial dstirbution (truncated at 1)"""
+    return sum(log(stats.nbinom.pmf(ab, n, p) / (1 - stats.nbinom.pmf(0, n, p))))
