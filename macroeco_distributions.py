@@ -21,7 +21,7 @@ def pln_lik(mu,sigma,abund_vect,approx_cut = 10):
     """
    
     L = matlib.repmat(None, len(abund_vect), 1)
-    if mu <= 0 or sigma <= 0:
+    if sigma <= 0:
         L = matlib.repmat(1e-120, len(abund_vect), 1) #very unlikely to have negative params
     else:
         for i, ab in enumerate(abund_vect):
