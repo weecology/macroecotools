@@ -128,7 +128,7 @@ def geom_ll(ab, p):
     return sum(log(stats.geom.pmf(ab, p)))
 
 def negbin_ll(ab, n, p):
-    """Log-likelihood of a negative binomial dstirbution (truncated at 1)"""
+    """Log-likelihood of a negative binomial dstribution (truncated at 1)"""
     return sum(log(stats.nbinom.pmf(ab, n, p) / (1 - stats.nbinom.pmf(0, n, p))))
 
 def negbin_solver(ab):
@@ -141,3 +141,27 @@ def negbin_solver(ab):
         return -negbin_ll(ab, x[0], x[1])
     n, p = optimize.fmin(negbin_func, x0 = [n0, p0])
     return n, p
+
+def dis_gamma_ll(ab, k, theta):
+    """Log-likelihood of a discrete gamma distribution
+    
+    k - shape parameter
+    theta - scale parameter
+    Normalization constant is calculated based on a cuf-off (currently set at 10**5)
+    
+    """
+    cutoff = 1e5
+    gamma_sum = sum(stats.gamma.pdf(range(1, cutoff + 1), k, scale = theta))
+    C = 1 / gamma_sum
+    return sum(log(stats.gamma.pdf(ab, k, scale = theta) * C))
+
+def dis_gamma_solver(ab):
+    """Given abundance data, solve for MLE of discrete gamma parameters k and theta"""
+    mu = np.mean(ab)
+    var = np.var(ab, ddof = 1)
+    theta0 = var / mu
+    k0 = mu / theta0
+    def dis_gamma_func(x):
+        return -dis_gamma_ll(ab, x[0], x[1])
+    k, theta = optimize.fmin(dis_gamma_func, x0 = [k0, theta0])
+    return k, theta 
