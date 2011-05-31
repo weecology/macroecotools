@@ -134,8 +134,8 @@ def negbin_ll(ab, n, p):
 def negbin_solver(ab):
     """Given abundance data, solve for MLE of negative binomial parameters n and p"""
     mu = np.mean(ab)
-    sig = np.var(ab, ddof = 1)
-    p0 = 1 - mu / sig
+    var = np.var(ab, ddof = 1)
+    p0 = 1 - mu / var
     n0 = mu * (1 - p0) / p0
     def negbin_func(x): 
         return -negbin_ll(ab, x[0], x[1])
