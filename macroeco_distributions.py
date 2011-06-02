@@ -5,7 +5,7 @@ from __future__ import division
 from math import factorial
 from numpy import array, exp, histogram, log, matlib, sort, sqrt, pi, std, mean
 import numpy as np
-from scipy import integrate, stats, optimize
+from scipy import integrate, stats, optimize, special
 
 def pln_lik(mu,sigma,abund_vect,approx_cut = 10):
     #TODO remove all use of matrices unless they are necessary for some
@@ -165,3 +165,39 @@ def dis_gamma_solver(ab):
         return -dis_gamma_ll(ab, x[0], x[1])
     k, theta = optimize.fmin(dis_gamma_func, x0 = [k0, theta0])
     return k, theta 
+
+def gen_yule_ll(ab, a, b):
+    """Log-likelihood of the Yule-Simon distribution.
+    
+    Follow the configuration of generalized Yule distribution in Nee 2003. 
+    The configuration on wikipedia and in Simon 1955 is the species case 
+    where a = 1 and b = rho. 
+    
+    """
+    ll = 0
+    for ab_i in ab: 
+        ll += log(b * special.gamma(a + b) * special.gamma(a + ab_i - 1) / 
+                  special.gamma(a) /  special.gamma(a + b + ab_i))
+    return ll
+
+def gen_yule_solver(ab):
+    """Given abundance data, solve for MLE of generalized Yule distribution parameters a and b"""
+    p1 = ab.count(1) / len(ab)
+    a0 = 1                    
+    b0 = p1 / (1-p1) * a0  # Initial guess based on expected frequency of singletons. NOT STABLE. 
+    def gen_yule_func(x):
+        return -gen_yule_ll(ab, x[0], x[1])
+    a, b = optimize.fmin(gen_yule_func, x0 = [a0, b0])
+    return a, b
+
+def yule_ll(ab, rho):
+    """Log-likelihood of the original Yule-Simon distribution."""
+    return gen_yule_ll(ab, 1, rho)
+
+def yule_solver(ab):
+    """Given abundance data, solve for MLE of original Yule distribution parameter rho"""
+    rho0 = np.mean(ab) / (np.mean(ab) - 1)
+    def yule_func(x):
+        return -yule_ll(ab, x)
+    rho = optimize.fmin(yule_func, x0 = rho0)
+    return rho
