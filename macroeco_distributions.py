@@ -109,6 +109,19 @@ def pln_solver(ab):
     mu, sigma = optimize.fmin(pln_func, x0 = [mu0, sig0])
     return mu, sigma
 
+def logser_trunc_solver(ab):
+    """Given abundance data, solve for MLE of truncated logseries parameter p"""
+    S = len(ab)
+    N = sum(ab)
+    m = array(range (1, N+1)) 
+    b = 1e-99
+    BOUNDS = [0, 1]
+    DIST_FROM_BOUND = 10 ** -15
+    y = lambda x: S / N * sum(x ** m) - log(1 / (1 - x)) + special.betainc(N + 1, b, x) * special.beta(N + 1, b)
+    p = optimize.bisect(y, BOUNDS[0] + DIST_FROM_BOUND, 1.005, 
+                                        xtol = 1.490116e-08)
+    return p
+
 def logser_ll(x, p):
     """Log-likelihood of a logseries distribution
     
