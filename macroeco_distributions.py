@@ -118,7 +118,7 @@ def logser_trunc_solver(ab):
     BOUNDS = [0, 1]
     DIST_FROM_BOUND = 10 ** -15
     y = lambda x: S / N * sum(x ** m) - log(1 / (1 - x)) + special.betainc(N + 1, b, x) * special.beta(N + 1, b)
-    p = optimize.bisect(y, BOUNDS[0] + DIST_FROM_BOUND, 1.005, 
+    p = optimize.bisect(y, BOUNDS[0] + DIST_FROM_BOUND, BOUNDS[1] - DIST_FROM_BOUND, 
                                         xtol = 1.490116e-08)
     return p
 
