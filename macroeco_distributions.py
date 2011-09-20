@@ -131,6 +131,14 @@ def logser_ll(x, p):
     """
     return sum(log(stats.logser.pmf(x, p)))
 
+def trunc_logser_pmf(x, p, upper_bound):
+    """Probability mass function for the upper truncated log-series"""
+    x = np.array(x)
+    ivals = np.arange(1, upper_bound + 1)
+    normalization = sum(p ** ivals / ivals)
+    pmf = (p ** x / x) / normalization
+    return pmf
+    
 def disunif_ll(ab, low, high):
     """Log-likelihood of a discrete uniform distribution with bounds [low, high]"""
     n = len(ab)
