@@ -95,6 +95,8 @@ def count_pts_within_radius(x, y, radius, logscale=0):
     #http://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.KDTree.query_ball_point.html
     #instead of doing the subset based on the circle
     raw_data = np.array([x, y])
+    x = np.array(x)
+    y = np.array(y)
     raw_data = raw_data.transpose()
     
     # Get unique data points by adding each pair of points to a set
