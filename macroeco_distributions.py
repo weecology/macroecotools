@@ -2,7 +2,7 @@
 #TODO convert from importing from numpy to importing numpy as np
 
 from __future__ import division
-from math import factorial
+from math import factorial, floor
 from numpy import array, exp, histogram, log, matlib, sort, sqrt, pi, std, mean
 import numpy as np
 from scipy import integrate, stats, optimize, special
