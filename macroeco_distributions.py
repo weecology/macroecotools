@@ -138,7 +138,13 @@ def trunc_logser_pmf(x, p, upper_bound):
     normalization = sum(p ** ivals / ivals)
     pmf = (p ** x / x) / normalization
     return pmf
-    
+
+def trunc_logser_cdf(x_max, p, upper_bound):
+    """Cumulative probability function for the upper truncated log-series"""
+    x_list = range(1, floor(x_max) + 1)
+    cdf = sum(trunc_logser_pmf(x_list, p, upper_bound))
+    return cdf
+
 def disunif_ll(ab, low, high):
     """Log-likelihood of a discrete uniform distribution with bounds [low, high]"""
     n = len(ab)
