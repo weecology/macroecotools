@@ -141,7 +141,7 @@ def trunc_logser_pmf(x, p, upper_bound):
 
 def trunc_logser_cdf(x_max, p, upper_bound):
     """Cumulative probability function for the upper truncated log-series"""
-    x_list = range(1, floor(x_max) + 1)
+    x_list = range(1, int(x_max) + 1)
     cdf = sum(trunc_logser_pmf(x_list, p, upper_bound))
     return cdf
 
