@@ -1,5 +1,4 @@
 """Probability and Likelihood Functions for Distribution Testing"""
-#TODO convert from importing from numpy to importing numpy as np
 
 from __future__ import division
 from math import factorial, floor
