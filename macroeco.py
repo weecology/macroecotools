@@ -7,6 +7,41 @@ import colorsys
 import convhull
 from numpy import log10
 
+def AICc(k, L, n):
+    """Computes the corrected Akaike Information Criterion. 
+    
+    Keyword arguments:
+    L  --  log likelihood value of given distribution.
+    k  --  number of fitted parameters.
+    n  --  number of observations.
+       
+    """
+    AICc = 2 * k - 2 * L + 2 * k * (k + 1) / (n - k - 1)
+    return AICc
+
+def aic_weight(AICc_dist1, AICc_dist2, n, cutoff = 4):
+    """Computes Akaike weight for one model relative to another
+    
+    Based on information from Burnham and Anderson (2002).
+    
+    Keyword arguments:
+    AICc_dist1  --  AICc for primary model of interest
+    AICc_dist2  --  AICc for alternative model
+    n           --  number of observations.
+    cutoff      --  minimum number of observations required to generate a weight.
+    
+    """
+    if n < cutoff:
+        weight = None
+        
+    else:
+        AICc_min = min(AICc_dist1, AICc_dist2)
+        weight_dist1 = np.exp(-(AICc_dist1 - AICc_min) / 2)
+        weight_dist2 = np.exp(-(AICc_dist2 - AICc_min) / 2)
+        weight = weight_dist1 / (weight_dist1 + weight_dist2)  
+      
+    return(weight)   
+
 def get_rad_from_cdf(cdf, S):
     """Return a predicted rank-abundance distribution from a theoretical CDF
     
