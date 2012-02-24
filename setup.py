@@ -1,8 +1,8 @@
 from distutils.core import setup
 
-setup(name='macroeco',
+setup(name='macroecotools',
       version='1.x-dev',
-      py_modules=['macroeco'])
+      py_modules=['macroecotools'])
 
 setup(name='macroeco_distributions',
       version='1.x-dev',
