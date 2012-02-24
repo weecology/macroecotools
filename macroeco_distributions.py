@@ -11,11 +11,16 @@ def pln_lik(mu,sigma,abund_vect,approx_cut = 10):
     #     unforseen reason
     """Probability function of the Poisson lognormal distribution
     
-    method derived from Bulmer 1974 Biometrics 30:101-110    
-    adapted from Brian McGill's MATLAB function of the same name
+    Method derived from Bulmer 1974 Biometrics 30:101-110    
     
     Bulmer equation 7 - approximation for large abundances
-    Bulmer equation 2 - integral for small abundances
+    Bulmer equation 2 - integral for small abundances    
+    
+    Adapted from Brian McGill's MATLAB function of the same name that was
+    originally developed as part of the Palamedes software package by the
+    National Center for Ecological Analysis and Synthesis working group on
+    Tools and Fresh Approaches for Species Abundance Distributions
+    (http://www.nceas.ucsb.edu/projects/11121)
     
     """
    
