@@ -4,7 +4,6 @@ from __future__ import division
 import numpy as np
 import matplotlib.pyplot as plt
 import colorsys
-import convhull
 from numpy import log10
 
 def AICc(k, L, n):
@@ -71,27 +70,6 @@ def get_rad_data(Ns):
     relab_sorted = Ns_sorted / sum(Ns_sorted)
     rank = range(1, len(Ns) + 1)
     return (rank, relab_sorted)
-    
-def plot_multiple_rads(list_of_abund_vectors, labels):
-    """Plots multiple rank-abundance distributions on a single plot"""
-    #TO DO:
-    #  Allow this function to handle a single abundance vector
-    #     Currently would treat each value as a full abundance vector
-    #     Could then change this to plot_rads and get rid of plot_rad
-    plt.figure()
-    line_styles = ['go-', 'ro-', 'bo-', 'ko-', 'go-', 'bx--', 'rx--', 'kx--', 'gx--']
-    num_styles = len(line_styles)
-    plt.hold(True)
-    for (style, Ns) in enumerate(list_of_abund_vectors):
-        (rank, relab) = get_rad_data(Ns)
-        #Plot line rotating through line_styles and starting at the beginning
-        #of line_styles again when all values have been used
-        plt.semilogy(rank, relab, line_styles[style % num_styles],
-                     linewidth=2, markersize=10, label=labels[style])
-    plt.hold(False)
-    plt.xlabel('Rank')
-    plt.ylabel('Abundance')
-    plt.legend()
 
 def preston_sad(abund_vector, b=None, normalized = 'no'):
     """Plot histogram of species abundances on a log2 scale"""
@@ -126,6 +104,7 @@ def plot_SARs(list_of_A_and_S):
     plt.ylabel('Richness')
     
 def count_pts_within_radius(x, y, radius, logscale=0):
+    """Count the number of points within a fixed radius in 2D space"""
     #TODO: see if we can improve performance using KDTree.query_ball_point
     #http://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.KDTree.query_ball_point.html
     #instead of doing the subset based on the circle
@@ -182,26 +161,6 @@ def plot_color_by_pt_dens(x, y, radius, loglog=0, plot_obj=None):
                     c = log10(sorted_plot_data[:, 2]), edgecolors='none')
     return plot_obj
 
-def confidence_hull(x, y, radius, confidence_int = 0.95, logscale=0, color='b',
-                    alpha=0.5):
-    count_data = count_pts_within_radius(x, y, radius, logscale)
-    sorted_count_data = np.array(sorted(count_data, key=lambda point: point[2], reverse=True))
-    total_count = sum(sorted_count_data[:, 2])
-    cum_proportion_of_counts = (np.cumsum(sorted_count_data[:, 2], axis=0) /
-                                    total_count)
-    sorted_points = sorted_count_data[:, 0:2]
-    confidence_points = sorted_points[cum_proportion_of_counts <= confidence_int]
-    hull_points = convhull.convex_hull(confidence_points.transpose(), graphic = False)
-    plot_points = np.vstack([hull_points, hull_points[0, :]])
-    plot_obj = plt.axes()
-    if logscale == 1:        
-        plot_obj.set_xscale('log')
-        plot_obj.set_yscale('log')
-        plot_obj.fill(plot_points[:,0], plot_points[:,1], color, alpha=alpha)
-    else:
-        plot_obj.fill(plot_points[:,0], plot_points[:,1], color, alpha=alpha)
-    return hull_points
-
 def e_var(abundance_data):
     """Calculate Smith and Wilson's (1996; Oikos 76:70-82) evenness index (Evar)
     
@@ -232,6 +191,12 @@ def obs_pred_rsquare(obs, pred):
     return 1 - sum((obs - pred) ** 2) / sum((obs - np.mean(obs)) ** 2)
 
 def comp_ed (spdata1,abdata1,spdata2,abdata2):
+    """Calculate the compositional Euclidean Distance between two sites
+    
+    Ref: Thibault KM, White EP, Ernest SKM. 2004. Temporal dynamics in the
+    structure and composition of a desert rodent community. Ecology. 85:2649-2655.
+    
+    """     
     abdata1 = (abdata1 * 1.0) / sum(abdata1)
     abdata2 = (abdata2 * 1.0) / sum(abdata2)
     intersect12 = set(spdata1).intersection(spdata2)
@@ -245,14 +210,16 @@ def comp_ed (spdata1,abdata1,spdata2,abdata2):
                               abdata2[np.setmember1d(spdata2,setdiff21)]))
     return np.sqrt(sum((relab1 - relab2) ** 2))
 
-def calc_comp_eds(ifile, fout, cutoff = 9):
-    """Calculate Euclidean distances in species composition & save to file
+def calc_comp_eds(ifile, fout):
+    """Calculate Euclidean distances in species composition across sites.
+    
+    Determines the Euclidean distances among all possible pairs of sites and
+    saves the results to a file
 
     Inputs:
     ifile -- ifile = np.genfromtxt(input_filename, dtype = "S15,S15,i8", 
                    names = ['site','species','ab'], delimiter = ",")
     fout -- fout = csv.writer(open(output_filename,'ab'))
-    cutoff --  minimum number of species required to run - 1
     
     """
     #TODO - Remove reliance on on names of columns in input
