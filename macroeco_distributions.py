@@ -110,7 +110,7 @@ def pln_solver(ab):
     sig0 = std(log(ab))
     def pln_func(x): 
         return -pln_ll(x[0], x[1], ab)
-    mu, sigma = optimize.fmin(pln_func, x0 = [mu0, sig0])
+    mu, sigma = optimize.fmin(pln_func, x0 = [mu0, sig0], disp=0)
     return mu, sigma
 
 def logser_trunc_solver(ab):
