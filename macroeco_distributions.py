@@ -79,12 +79,15 @@ def pln_lik(mu,sigma,abund_vect,approx_cut = 10):
 def pln_ll(mu,sigma,ab):
     """Log-likelihood of a truncated Poisson lognormal distribution
     
-    method derived from Bulmer 1974 Biometrics 30:101-110    
-    adapted from Brian McGill's MATLAB function of the same name
+    Method derived from Bulmer 1974 Biometrics 30:101-110    
     
-    Bulmer equation A1 - note 2nd term is renormalization for zero-truncation
-    otherwise is just standard likelihood - relies on pln_lik function above to
-    calculate probability for each r
+    Bulmer equation A1
+    
+    Adapted from Brian McGill's MATLAB function of the same name that was
+    originally developed as part of the Palamedes software package by the
+    National Center for Ecological Analysis and Synthesis working group on
+    Tools and Fresh Approaches for Species Abundance Distributions
+    (http://www.nceas.ucsb.edu/projects/11121)    
     
     """
     #purify abundance vector
@@ -100,12 +103,23 @@ def pln_ll(mu,sigma,ab):
     term1 = array([], dtype = float)
     for i, count in enumerate(counts):
         term1 = np.append(term1, count * plik[i])
+        
+    #Renormalization for zero truncation
     term2 = len(ab) * log(1 - array(pln_lik(mu, sigma, [0]), dtype = float))
+    
     ll = sum(term1) - term2
     return ll[0]
 
 def pln_solver(ab):
-    """Given abundance data, solve for MLE of pln parameters mu and sigma"""
+    """Given abundance data, solve for MLE of pln parameters mu and sigma
+    
+    Adapted from MATLAB code by Brian McGill that was originally developed as
+    part of the Palamedes software package by the National Center for Ecological
+    Analysis and Synthesis working group on Tools and Fresh Approaches for
+    Species Abundance Distributions (http://www.nceas.ucsb.edu/projects/11121)
+    
+    """
+
     mu0 = mean(log(ab))
     sig0 = std(log(ab))
     def pln_func(x): 
