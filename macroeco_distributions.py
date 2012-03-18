@@ -6,7 +6,7 @@ from numpy import array, exp, histogram, log, matlib, sort, sqrt, pi, std, mean
 import numpy as np
 from scipy import integrate, stats, optimize, special
 
-def pln_lik(mu,sigma,abund_vect,approx_cut = 10):
+def pln_lik(mu,sigma,abund_vect,approx_cut = 10, full_output=0):
     #TODO remove all use of matrices unless they are necessary for some
     #     unforseen reason
     """Probability function of the Poisson lognormal distribution
@@ -58,14 +58,16 @@ def pln_lik(mu,sigma,abund_vect,approx_cut = 10):
                 term1 = ((2 * pi * sigma ** 2) ** -0.5)/ factorial(ab)
             #integrate low end where peak is so it finds peak
                 term2a = integrate.quad(lambda x: ((x ** (ab - 1)) * 
-                                               (exp(-x)) * 
-                                               exp(-(log(x) - mu) ** 2 / 
-                                                (2 * sigma ** 2))), 0, ub)
+                                                   (exp(-x)) * 
+                                                   exp(-(log(x) - mu) ** 2 / 
+                                                       (2 * sigma ** 2))), 0,
+                                               ub, full_output=full_output)
             #integrate higher end for accuracy and in case peak moves
                 term2b = integrate.quad(lambda x: ((x ** (ab - 1)) * 
-                                               (exp(-x)) * exp(-(log(x) - mu) ** 
-                                                               2/ (2 * sigma ** 
-                                                                   2))), ub, float('inf'))
+                                                   (exp(-x)) * exp(-(log(x) - mu) ** 
+                                                                   2/ (2 * sigma ** 
+                                                                       2))), ub,
+                                               float('inf'), full_output=full_output)
                 Pr = term1 * term2a[0]
                 Pr_add = term1 * term2b[0]                
                 L[i,] = Pr + Pr_add            
@@ -76,7 +78,7 @@ def pln_lik(mu,sigma,abund_vect,approx_cut = 10):
                     L[i,] = 1e-120
     return (L)
 
-def pln_ll(mu,sigma,ab):
+def pln_ll(mu, sigma, ab, full_output=0):
     """Log-likelihood of a truncated Poisson lognormal distribution
     
     Method derived from Bulmer 1974 Biometrics 30:101-110    
@@ -99,13 +101,13 @@ def pln_ll(mu,sigma,ab):
     cts = histogram(ab, bins = range(1, max(ab) + 2))
     observed_abund_vals = cts[1][cts[0] != 0]
     counts = cts[0][cts[0] != 0]
-    plik = log(array(pln_lik(mu, sigma, observed_abund_vals), dtype = float))
+    plik = log(array(pln_lik(mu, sigma, observed_abund_vals, full_output=full_output), dtype = float))
     term1 = array([], dtype = float)
     for i, count in enumerate(counts):
         term1 = np.append(term1, count * plik[i])
         
     #Renormalization for zero truncation
-    term2 = len(ab) * log(1 - array(pln_lik(mu, sigma, [0]), dtype = float))
+    term2 = len(ab) * log(1 - array(pln_lik(mu, sigma, [0], full_output=full_output), dtype = float))
     
     ll = sum(term1) - term2
     return ll[0]
@@ -123,7 +125,7 @@ def pln_solver(ab):
     mu0 = mean(log(ab))
     sig0 = std(log(ab))
     def pln_func(x): 
-        return -pln_ll(x[0], x[1], ab)
+        return -pln_ll(x[0], x[1], ab, full_output=1)
     mu, sigma = optimize.fmin(pln_func, x0 = [mu0, sig0], disp=0)
     return mu, sigma
 
