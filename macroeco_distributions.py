@@ -61,13 +61,13 @@ def pln_lik(mu,sigma,abund_vect,approx_cut = 10, full_output=0):
                                                    (exp(-x)) * 
                                                    exp(-(log(x) - mu) ** 2 / 
                                                        (2 * sigma ** 2))), 0,
-                                               ub, full_output=full_output)
+                                               ub, full_output=full_output, limit=100)
             #integrate higher end for accuracy and in case peak moves
                 term2b = integrate.quad(lambda x: ((x ** (ab - 1)) * 
                                                    (exp(-x)) * exp(-(log(x) - mu) ** 
                                                                    2/ (2 * sigma ** 
                                                                        2))), ub,
-                                               float('inf'), full_output=full_output)
+                                               float('inf'), full_output=full_output, limit=100)
                 Pr = term1 * term2a[0]
                 Pr_add = term1 * term2b[0]                
                 L[i,] = Pr + Pr_add            
