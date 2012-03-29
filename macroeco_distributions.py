@@ -2,14 +2,13 @@
 
 from __future__ import division
 from math import factorial, floor
-from numpy import array, exp, histogram, log, matlib, sort, sqrt, pi, std, mean
+from numpy import exp, histogram, log, matlib, sort, sqrt, pi, std, mean
 import numpy as np
 from scipy import integrate, stats, optimize, special
+from scipy.stats import rv_discrete, rv_continuous
 
-def pln_lik(mu,sigma,abund_vect,approx_cut = 10, full_output=0):
-    #TODO remove all use of matrices unless they are necessary for some
-    #     unforseen reason
-    """Probability function of the Poisson lognormal distribution
+class poisson_lognormal():
+    """Poisson lognormal distribution
     
     Method derived from Bulmer 1974 Biometrics 30:101-110    
     
@@ -23,94 +22,97 @@ def pln_lik(mu,sigma,abund_vect,approx_cut = 10, full_output=0):
     (http://www.nceas.ucsb.edu/projects/11121)
     
     """
-   
-    L = matlib.repmat(None, len(abund_vect), 1)
-    if sigma <= 0:
-        L = matlib.repmat(1e-120, len(abund_vect), 1) #very unlikely to have negative params
-    else:
-        for i, ab in enumerate(abund_vect):
-            if ab > approx_cut:
-            #use approximation for large abundances    
-            #Bulmer equation 7
-            #tested vs. integral below - matches to about 6 significant digits for
-            #intermediate abundances (10-50) - integral fails for higher
-            #abundances, approx fails for lower abundances - 
-            #assume it gets better for abundance > 50
-                V = sigma ** 2
-                L[i,] = (1 / sqrt(2 * pi * V) / ab *
-                         exp(-(log(ab) - mu) ** 2 / (2 * V)) *
-                         (1 + 1 / (2 * ab * V) * ((log(ab) - mu) ** 2 / V +
-                                                  log(ab) - mu - 1)))
-            else:
-            # Bulmer equation 2 -tested against Grundy Biometrika 38:427-434
-            # Table 1 & Table 2 and matched to the 4 decimals in the table except
-            # for very small mu (10^-2)
-            # having the /gamma(ab+1) inside the integrand is inefficient but
-            # avoids pseudo-singularities        
-            # split integral into two so the quad function finds the peak
-            # peak apppears to be just below ab - for very small ab (ab<10)
-            # works better to leave entire peak in one integral and integrate 
-            # the tail in the second integral
-                if ab < 10:
-                    ub = 10
-                else: 
-                    ub = ab       
-                term1 = ((2 * pi * sigma ** 2) ** -0.5)/ factorial(ab)
-            #integrate low end where peak is so it finds peak
-                term2a = integrate.quad(lambda x: ((x ** (ab - 1)) * 
-                                                   (exp(-x)) * 
-                                                   exp(-(log(x) - mu) ** 2 / 
-                                                       (2 * sigma ** 2))), 0,
-                                               ub, full_output=full_output, limit=100)
-            #integrate higher end for accuracy and in case peak moves
-                term2b = integrate.quad(lambda x: ((x ** (ab - 1)) * 
-                                                   (exp(-x)) * exp(-(log(x) - mu) ** 
-                                                                   2/ (2 * sigma ** 
-                                                                       2))), ub,
-                                               float('inf'), full_output=full_output, limit=100)
-                Pr = term1 * term2a[0]
-                Pr_add = term1 * term2b[0]                
-                L[i,] = Pr + Pr_add            
-            
-                if L[i,] <= 0:
-                #likelihood shouldn't really be zero and causes problem taking 
-                #log of it
-                    L[i,] = 1e-120
-    return (L)
-
-def pln_ll(mu, sigma, ab, full_output=0):
-    """Log-likelihood of a truncated Poisson lognormal distribution
-    
-    Method derived from Bulmer 1974 Biometrics 30:101-110    
-    
-    Bulmer equation A1
-    
-    Adapted from Brian McGill's MATLAB function of the same name that was
-    originally developed as part of the Palamedes software package by the
-    National Center for Ecological Analysis and Synthesis working group on
-    Tools and Fresh Approaches for Species Abundance Distributions
-    (http://www.nceas.ucsb.edu/projects/11121)    
-    
-    """
-    #purify abundance vector
-    ab = array(ab)
-    ab.transpose()
-    ab = ab[ab>0]
-    ab.sort()
-    
-    cts = histogram(ab, bins = range(1, max(ab) + 2))
-    observed_abund_vals = cts[1][cts[0] != 0]
-    counts = cts[0][cts[0] != 0]
-    plik = log(array(pln_lik(mu, sigma, observed_abund_vals, full_output=full_output), dtype = float))
-    term1 = array([], dtype = float)
-    for i, count in enumerate(counts):
-        term1 = np.append(term1, count * plik[i])
+    def __init__(self, mu, sigma):
+        self.mu = mu
+        self.sigma = sigma
         
-    #Renormalization for zero truncation
-    term2 = len(ab) * log(1 - array(pln_lik(mu, sigma, [0], full_output=full_output), dtype = float))
+    def pmf(self, x, approx_cut = 10, full_output = 0):
+        mu = self.mu
+        sigma = self.sigma
+        pmf = np.array([[1e-120]] * len(x))
+        if sigma > 0: 
+            for i, x_i in enumerate(x):
+                if x_i > approx_cut:
+                #use approximation for large abundances    
+                #Bulmer equation 7
+                #tested vs. integral below - matches to about 6 significant digits for
+                #intermediate abundances (10-50) - integral fails for higher
+                #abundances, approx fails for lower abundances - 
+                #assume it gets better for abundance > 50
+                    V = sigma ** 2
+                    pmf[i,] = (1 / sqrt(2 * pi * V) / x_i *
+                             exp(-(log(x_i) - mu) ** 2 / (2 * V)) *
+                             (1 + 1 / (2 * x_i * V) * ((log(x_i) - mu) ** 2 / V +
+                                                      log(x_i) - mu - 1)))
+
+                else:
+                # Bulmer equation 2 -tested against Grundy Biometrika 38:427-434
+                # Table 1 & Table 2 and matched to the 4 decimals in the table except
+                # for very small mu (10^-2)
+                # having the /gamma(ab+1) inside the integrand is inefficient but
+                # avoids pseudo-singularities        
+                # split integral into two so the quad function finds the peak
+                # peak apppears to be just below ab - for very small ab (ab<10)
+                # works better to leave entire peak in one integral and integrate 
+                # the tail in the second integral
+                    if x_i < 10:
+                        ub = 10
+                    else: 
+                        ub = x_i       
+                    term1 = ((2 * pi * sigma ** 2) ** -0.5)/ factorial(x_i)
+                #integrate low end where peak is so it finds peak
+                    term2a = integrate.quad(lambda x: ((x ** (x_i - 1)) * 
+                                                       (exp(-x)) * 
+                                                       exp(-(log(x) - mu) ** 2 / 
+                                                           (2 * sigma ** 2))), 0,
+                                                   ub, full_output = full_output, limit = 100)
+                #integrate higher end for accuracy and in case peak moves
+                    term2b = integrate.quad(lambda x: ((x ** (x_i - 1)) * 
+                                                       (exp(-x)) * exp(-(log(x) - mu) ** 
+                                                                       2/ (2 * sigma ** 
+                                                                           2))), ub,
+                                                   float('inf'), full_output = full_output, limit = 100)
+                    Pr = term1 * term2a[0]
+                    Pr_add = term1 * term2b[0]  
+                    if Pr + Pr_add > 0: 
+                    #likelihood shouldn't really be zero and causes problem taking 
+                    #log of it
+                        pmf[i,] = Pr + Pr_add            
+        return pmf
     
-    ll = sum(term1) - term2
-    return ll[0]
+    def ll(self, x, full_output = 0):
+        """Log-likelihood of a truncated Poisson lognormal distribution
+        
+        Method derived from Bulmer 1974 Biometrics 30:101-110    
+        
+        Bulmer equation A1
+        
+        Adapted from Brian McGill's MATLAB function of the same name that was
+        originally developed as part of the Palamedes software package by the
+        National Center for Ecological Analysis and Synthesis working group on
+        Tools and Fresh Approaches for Species Abundance Distributions
+        (http://www.nceas.ucsb.edu/projects/11121)    
+        
+        """
+        mu = self.mu
+        sigma = self.sigma
+        #purify abundance vector
+        x = np.array(x)
+        x = x[x > 0]
+        x.sort()
+        cts = histogram(x, bins = range(1, max(x) + 2))
+        observed_abund_vals = cts[1][cts[0] != 0]
+        counts = cts[0][cts[0] != 0]
+        plik = log(self.pmf(observed_abund_vals, full_output = full_output))
+        term1 = array([], dtype = float)
+        for i, count in enumerate(counts):
+            term1 = np.append(term1, count * plik[i])
+        
+        #Renormalization for zero truncation
+        term2 = len(x) * log(1 - self.pmf([0], full_output=full_output))
+    
+        ll = sum(term1) - term2
+        return ll[0]
 
 def pln_solver(ab):
     """Given abundance data, solve for MLE of pln parameters mu and sigma
