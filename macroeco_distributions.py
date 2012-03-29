@@ -7,7 +7,7 @@ import numpy as np
 from scipy import integrate, stats, optimize, special
 from scipy.stats import rv_discrete, rv_continuous
 
-class poisson_lognormal():
+class poisson_lognormal(rv_discrete):
     """Poisson lognormal distribution
     
     Method derived from Bulmer 1974 Biometrics 30:101-110    
@@ -21,52 +21,45 @@ class poisson_lognormal():
     Tools and Fresh Approaches for Species Abundance Distributions
     (http://www.nceas.ucsb.edu/projects/11121)
     
-    """
-    def __init__(self, mu, sigma):
-        self.mu = mu
-        self.sigma = sigma
-        
-    def pmf(self, x, approx_cut = 10, full_output = 0):
-        mu = self.mu
-        sigma = self.sigma
-        pmf = np.array([[1e-120]] * len(x))
-        if sigma > 0: 
-            for i, x_i in enumerate(x):
-                if x_i > approx_cut:
-                #use approximation for large abundances    
-                #Bulmer equation 7
-                #tested vs. integral below - matches to about 6 significant digits for
-                #intermediate abundances (10-50) - integral fails for higher
-                #abundances, approx fails for lower abundances - 
-                #assume it gets better for abundance > 50
+    """    
+    def _pmf(self, x, mu, sigma, lower_trunc, approx_cut = 10, full_output = 0):
+        def untrunc_pmf(x_i, mu, sigma):
+            pmf_i = 1e-120
+            if sigma > 0:
+                if x_i > approx_cut: 
+                    #use approximation for large abundances    
+                    #Bulmer equation 7
+                    #tested vs. integral below - matches to about 6 significant digits for
+                    #intermediate abundances (10-50) - integral fails for higher
+                    #abundances, approx fails for lower abundances - 
+                    #assume it gets better for abundance > 50
                     V = sigma ** 2
-                    pmf[i,] = (1 / sqrt(2 * pi * V) / x_i *
-                             exp(-(log(x_i) - mu) ** 2 / (2 * V)) *
-                             (1 + 1 / (2 * x_i * V) * ((log(x_i) - mu) ** 2 / V +
-                                                      log(x_i) - mu - 1)))
-
+                    pmf_i = (1 / sqrt(2 * pi * V) / x_i *
+                           exp(-(log(x_i) - mu) ** 2 / (2 * V)) *
+                           (1 + 1 / (2 * x_i * V) * ((log(x_i) - mu) ** 2 / V +
+                                                    log(x_i) - mu- 1)))
                 else:
-                # Bulmer equation 2 -tested against Grundy Biometrika 38:427-434
-                # Table 1 & Table 2 and matched to the 4 decimals in the table except
-                # for very small mu (10^-2)
-                # having the /gamma(ab+1) inside the integrand is inefficient but
-                # avoids pseudo-singularities        
-                # split integral into two so the quad function finds the peak
-                # peak apppears to be just below ab - for very small ab (ab<10)
-                # works better to leave entire peak in one integral and integrate 
-                # the tail in the second integral
+                    # Bulmer equation 2 -tested against Grundy Biometrika 38:427-434
+                    # Table 1 & Table 2 and matched to the 4 decimals in the table except
+                    # for very small mu (10^-2)
+                    # having the /gamma(ab+1) inside the integrand is inefficient but
+                    # avoids pseudo-singularities        
+                    # split integral into two so the quad function finds the peak
+                    # peak apppears to be just below ab - for very small ab (ab<10)
+                    # works better to leave entire peak in one integral and integrate 
+                    # the tail in the second integral
                     if x_i < 10:
                         ub = 10
-                    else: 
-                        ub = x_i       
+                    else:
+                        ub = x_i
                     term1 = ((2 * pi * sigma ** 2) ** -0.5)/ factorial(x_i)
-                #integrate low end where peak is so it finds peak
+                    #integrate low end where peak is so it finds peak
                     term2a = integrate.quad(lambda x: ((x ** (x_i - 1)) * 
                                                        (exp(-x)) * 
                                                        exp(-(log(x) - mu) ** 2 / 
                                                            (2 * sigma ** 2))), 0,
                                                    ub, full_output = full_output, limit = 100)
-                #integrate higher end for accuracy and in case peak moves
+                    #integrate higher end for accuracy and in case peak moves
                     term2b = integrate.quad(lambda x: ((x ** (x_i - 1)) * 
                                                        (exp(-x)) * exp(-(log(x) - mu) ** 
                                                                        2/ (2 * sigma ** 
@@ -77,8 +70,20 @@ class poisson_lognormal():
                     if Pr + Pr_add > 0: 
                     #likelihood shouldn't really be zero and causes problem taking 
                     #log of it
-                        pmf[i,] = Pr + Pr_add            
-        return pmf
+                        pmf_i = Pr + Pr_add  
+            return pmf_i  
+        
+        pmf = []
+        for i, x_i in enumerate(x):
+            if lower_trunc[i]:
+                pmf_i = untrunc_pmf(x_i, mu[i], sigma[i]) / (1 - untrunc_pmf(0, mu[i], sigma[i]))
+            else:
+                pmf_i = untrunc_pmf(x_i, mu[i], sigma[i])
+            pmf.append(pmf_i)
+        return np.array(pmf)
+
+    def _argcheck(self, *args):
+        return 1
     
     def ll(self, x, full_output = 0):
         """Log-likelihood of a truncated Poisson lognormal distribution
@@ -109,10 +114,10 @@ class poisson_lognormal():
             term1 = np.append(term1, count * plik[i])
         
         #Renormalization for zero truncation
-        term2 = len(x) * log(1 - self.pmf([0], full_output=full_output))
+        term2 = len(x) * log(1 - self.pmf([0], full_output=full_output)[0])
     
         ll = sum(term1) - term2
-        return ll[0]
+        return ll
 
 def pln_solver(ab):
     """Given abundance data, solve for MLE of pln parameters mu and sigma
