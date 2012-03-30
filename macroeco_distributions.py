@@ -147,6 +147,64 @@ def pln_ll(x, mu, sigma, lower_trunc = True, full_output = 0):
     ll = sum(lik_list)
     return ll   
 
+def logser_ll(x, p, upper_trunc = False, upper_bound = None):
+    """Log-likelihood of a logseries distribution
+    
+    x  -  quantiles
+    p  -  lower or upper tail probability 
+    upper_trunc - whether the distribution is upper truncated
+    upper_bound - the upper bound of the distribution, if upper_trunc is True
+    
+    """
+    if upper_trunc:
+        return sum(trunc_logser.logpmf(x, p, upper_bound))
+    else:
+        return sum(stats.logser.logpmf(x, p))
+
+def disunif_ll(ab, low, high):
+    """Log-likelihood of a discrete uniform distribution with bounds [low, high]"""
+    n = len(ab)
+    return n * log(1 / (high - low + 1))
+
+def geom_ll(ab, p):
+    """Log-likelihood of a geomtric distribution"""
+    return sum(stats.geom.logpmf(ab, p))
+
+def negbin_ll(ab, n, p):
+    """Log-likelihood of a negative binomial dstribution (truncated at 1)"""
+    return sum(log(stats.nbinom.pmf(ab, n, p) / (1 - stats.nbinom.pmf(0, n, p))))
+
+def dis_gamma_ll(ab, k, theta):
+    """Log-likelihood of a discrete gamma distribution
+    
+    k - shape parameter
+    theta - scale parameter
+    Normalization constant is calculated based on a cuf-off (currently set at 10**5)
+    
+    """
+    cutoff = 1e5
+    gamma_sum = sum(stats.gamma.pdf(range(1, cutoff + 1), k, scale = theta))
+    C = 1 / gamma_sum
+    return sum(log(stats.gamma.pdf(ab, k, scale = theta) * C))
+
+def gen_yule_ll(ab, a, b):
+    """Log-likelihood of the Yule-Simon distribution.
+    
+    Follow the configuration of generalized Yule distribution in Nee 2003. 
+    The configuration on wikipedia and in Simon 1955 is the species case 
+    where a = 1 and b = rho. 
+    
+    """
+    ll = 0
+    for ab_i in ab: 
+        ll += log(b * special.gamma(a + b) * special.gamma(a + ab_i - 1) / 
+                  special.gamma(a) /  special.gamma(a + b + ab_i))
+    return ll
+
+def yule_ll(ab, rho):
+    """Log-likelihood of the original Yule-Simon distribution."""
+    return gen_yule_ll(ab, 1, rho)
+
 def pln_solver(ab, lower_trunc = True):
     """Given abundance data, solve for MLE of pln parameters mu and sigma
     
@@ -176,28 +234,6 @@ def trunc_logser_solver(ab):
                         min((sys.float_info[0] / S) ** (1 / N), 2), xtol = 1.490116e-08)
     return p
 
-def logser_ll(x, p):
-    """Log-likelihood of a logseries distribution
-    
-    x  -  quantiles
-    p  -  lower or upper tail probability 
-    
-    """
-    return sum(log(stats.logser.pmf(x, p)))
-
-def disunif_ll(ab, low, high):
-    """Log-likelihood of a discrete uniform distribution with bounds [low, high]"""
-    n = len(ab)
-    return n * log(1 / (high - low + 1))
-
-def geom_ll(ab, p):
-    """Log-likelihood of a geomtric distribution"""
-    return sum(log(stats.geom.pmf(ab, p)))
-
-def negbin_ll(ab, n, p):
-    """Log-likelihood of a negative binomial dstribution (truncated at 1)"""
-    return sum(log(stats.nbinom.pmf(ab, n, p) / (1 - stats.nbinom.pmf(0, n, p))))
-
 def negbin_solver(ab):
     """Given abundance data, solve for MLE of negative binomial parameters n and p"""
     mu = np.mean(ab)
@@ -208,19 +244,6 @@ def negbin_solver(ab):
         return -negbin_ll(ab, x[0], x[1])
     n, p = optimize.fmin(negbin_func, x0 = [n0, p0])
     return n, p
-
-def dis_gamma_ll(ab, k, theta):
-    """Log-likelihood of a discrete gamma distribution
-    
-    k - shape parameter
-    theta - scale parameter
-    Normalization constant is calculated based on a cuf-off (currently set at 10**5)
-    
-    """
-    cutoff = 1e5
-    gamma_sum = sum(stats.gamma.pdf(range(1, cutoff + 1), k, scale = theta))
-    C = 1 / gamma_sum
-    return sum(log(stats.gamma.pdf(ab, k, scale = theta) * C))
 
 def dis_gamma_solver(ab):
     """Given abundance data, solve for MLE of discrete gamma parameters k and theta"""
@@ -233,20 +256,6 @@ def dis_gamma_solver(ab):
     k, theta = optimize.fmin(dis_gamma_func, x0 = [k0, theta0])
     return k, theta 
 
-def gen_yule_ll(ab, a, b):
-    """Log-likelihood of the Yule-Simon distribution.
-    
-    Follow the configuration of generalized Yule distribution in Nee 2003. 
-    The configuration on wikipedia and in Simon 1955 is the species case 
-    where a = 1 and b = rho. 
-    
-    """
-    ll = 0
-    for ab_i in ab: 
-        ll += log(b * special.gamma(a + b) * special.gamma(a + ab_i - 1) / 
-                  special.gamma(a) /  special.gamma(a + b + ab_i))
-    return ll
-
 def gen_yule_solver(ab):
     """Given abundance data, solve for MLE of generalized Yule distribution parameters a and b"""
     p1 = ab.count(1) / len(ab)
@@ -256,10 +265,6 @@ def gen_yule_solver(ab):
         return -gen_yule_ll(ab, x[0], x[1])
     a, b = optimize.fmin(gen_yule_func, x0 = [a0, b0])
     return a, b
-
-def yule_ll(ab, rho):
-    """Log-likelihood of the original Yule-Simon distribution."""
-    return gen_yule_ll(ab, 1, rho)
 
 def yule_solver(ab):
     """Given abundance data, solve for MLE of original Yule distribution parameter rho"""
