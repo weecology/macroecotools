@@ -7,7 +7,7 @@ import numpy as np
 from scipy import integrate, stats, optimize, special
 from scipy.stats import rv_discrete, rv_continuous
 
-class poisson_lognormal(rv_discrete):
+class pln_gen(rv_discrete):
     """Poisson lognormal distribution
     
     Method derived from Bulmer 1974 Biometrics 30:101-110    
@@ -75,7 +75,7 @@ class poisson_lognormal(rv_discrete):
         
         pmf = []
         for i, x_i in enumerate(x):
-            if lower_trunc[i]:
+            if lower_trunc[i]: # distribution lowered truncated at 1 (not accouting for zero-abundance species)
                 pmf_i = untrunc_pmf(x_i, mu[i], sigma[i]) / (1 - untrunc_pmf(0, mu[i], sigma[i]))
             else:
                 pmf_i = untrunc_pmf(x_i, mu[i], sigma[i])
@@ -85,41 +85,37 @@ class poisson_lognormal(rv_discrete):
     def _argcheck(self, *args):
         return 1
     
-    def ll(self, x, full_output = 0):
-        """Log-likelihood of a truncated Poisson lognormal distribution
-        
-        Method derived from Bulmer 1974 Biometrics 30:101-110    
-        
-        Bulmer equation A1
-        
-        Adapted from Brian McGill's MATLAB function of the same name that was
-        originally developed as part of the Palamedes software package by the
-        National Center for Ecological Analysis and Synthesis working group on
-        Tools and Fresh Approaches for Species Abundance Distributions
-        (http://www.nceas.ucsb.edu/projects/11121)    
-        
-        """
-        mu = self.mu
-        sigma = self.sigma
-        #purify abundance vector
-        x = np.array(x)
-        x = x[x > 0]
-        x.sort()
-        cts = histogram(x, bins = range(1, max(x) + 2))
-        observed_abund_vals = cts[1][cts[0] != 0]
-        counts = cts[0][cts[0] != 0]
-        plik = log(self.pmf(observed_abund_vals, full_output = full_output))
-        term1 = array([], dtype = float)
-        for i, count in enumerate(counts):
-            term1 = np.append(term1, count * plik[i])
-        
-        #Renormalization for zero truncation
-        term2 = len(x) * log(1 - self.pmf([0], full_output=full_output)[0])
-    
-        ll = sum(term1) - term2
-        return ll
+pln = pln_gen(name='pln', longname='Poisson lognormal')
 
-def pln_solver(ab):
+def pln_ll(x, mu, sigma, lower_trunc = True, full_output = 0):
+    """Log-likelihood of a truncated Poisson lognormal distribution
+    
+    Method derived from Bulmer 1974 Biometrics 30:101-110    
+    
+    Bulmer equation A1
+    
+    Adapted from Brian McGill's MATLAB function of the same name that was
+    originally developed as part of the Palamedes software package by the
+    National Center for Ecological Analysis and Synthesis working group on
+    Tools and Fresh Approaches for Species Abundance Distributions
+    (http://www.nceas.ucsb.edu/projects/11121)    
+    
+    """
+    #purify abundance vector
+    x = np.array(x)
+    x = x[x > 0]
+    x.sort()
+    cts = histogram(x, bins = range(1, max(x) + 2))
+    observed_abund_vals = cts[1][cts[0] != 0]
+    counts = cts[0][cts[0] != 0]
+    plik = pln.logpmf(observed_abund_vals, mu, sigma, lower_trunc, full_output = full_output)
+    lik_list = np.array([], dtype = float)
+    for i, count in enumerate(counts):
+        lik_list = np.append(lik_list, count * plik[i])
+    ll = sum(lik_list)
+    return ll
+
+def pln_solver(ab, lower_trunc = True):
     """Given abundance data, solve for MLE of pln parameters mu and sigma
     
     Adapted from MATLAB code by Brian McGill that was originally developed as
@@ -128,12 +124,12 @@ def pln_solver(ab):
     Species Abundance Distributions (http://www.nceas.ucsb.edu/projects/11121)
     
     """
-
+    ab = np.array(ab)
     mu0 = mean(log(ab))
     sig0 = std(log(ab))
     def pln_func(x): 
-        return -pln_ll(x[0], x[1], ab, full_output=1)
-    mu, sigma = optimize.fmin(pln_func, x0 = [mu0, sig0], disp=0)
+        return -pln_ll(ab, x[0], x[1], lower_trunc, full_output = 1)
+    mu, sigma = optimize.fmin(pln_func, x0 = [mu0, sig0], disp = 0)
     return mu, sigma
 
 def logser_trunc_solver(ab):
