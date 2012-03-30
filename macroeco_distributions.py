@@ -1,6 +1,7 @@
 """Probability and Likelihood Functions for Distribution Testing"""
 
 from __future__ import division
+import sys
 from math import factorial, floor
 from numpy import exp, histogram, log, matlib, sort, sqrt, pi, std, mean
 import numpy as np
@@ -87,6 +88,37 @@ class pln_gen(rv_discrete):
     
 pln = pln_gen(name='pln', longname='Poisson lognormal')
 
+class trunc_logser_gen(rv_discrete):
+    """Upper truncated logseries distribution
+    
+    Scipy based distribution class for the truncated logseries pmf, cdf and rvs
+    
+    Usage:
+    PMF: trunc_logser.pmf(list_of_xvals, p, upper_bound)
+    CDF: trunc_logser.cdf(list_of_xvals, p, upper_bound)
+    Random Numbers: trunc_logser.rvs(p, upper_bound, size=1)
+    
+    """
+    def _pmf(self, x, p, upper_bound):
+        x = np.array(x)
+        if p < 1:
+            return stats.logser.pmf(x, p) / stats.logser.cdf(upper_bound, p)
+        else:
+            x = np.array(x)
+            ivals = np.arange(1, upper_bound + 1)
+            normalization = sum(p ** ivals / ivals)
+            pmf = (p ** x / x) / normalization
+            return pmf
+
+trunc_logser = trunc_logser_gen(a=1, name='trunc_logser',
+                                longname='Upper truncated logseries',
+                                shapes="upper_bound",
+                                extradoc="""Truncated logseries
+                                
+                                Upper truncated logseries distribution
+                                """
+                                )
+
 def pln_ll(x, mu, sigma, lower_trunc = True, full_output = 0):
     """Log-likelihood of a truncated Poisson lognormal distribution
     
@@ -113,7 +145,7 @@ def pln_ll(x, mu, sigma, lower_trunc = True, full_output = 0):
     for i, count in enumerate(counts):
         lik_list = np.append(lik_list, count * plik[i])
     ll = sum(lik_list)
-    return ll
+    return ll   
 
 def pln_solver(ab, lower_trunc = True):
     """Given abundance data, solve for MLE of pln parameters mu and sigma
@@ -132,17 +164,16 @@ def pln_solver(ab, lower_trunc = True):
     mu, sigma = optimize.fmin(pln_func, x0 = [mu0, sig0], disp = 0)
     return mu, sigma
 
-def logser_trunc_solver(ab):
+def trunc_logser_solver(ab):
     """Given abundance data, solve for MLE of truncated logseries parameter p"""
-    S = len(ab)
-    N = sum(ab)
-    m = array(range (1, N+1)) 
-    b = 1e-99
     BOUNDS = [0, 1]
     DIST_FROM_BOUND = 10 ** -15
-    y = lambda x: S / N * sum(x ** m) - log(1 / (1 - x)) + special.betainc(N + 1, b, x) * special.beta(N + 1, b)
-    p = optimize.bisect(y, BOUNDS[0] + DIST_FROM_BOUND, BOUNDS[1] - DIST_FROM_BOUND, 
-                                        xtol = 1.490116e-08)
+    S = len(ab)
+    N = sum(ab)
+    m = np.array(range (1, int(N) + 1)) 
+    y = lambda x: sum(x ** m / N * S) - sum((x ** m) / m)
+    p = optimize.bisect(y, BOUNDS[0] + DIST_FROM_BOUND, 
+                        min((sys.float_info[0] / S) ** (1 / N), 2), xtol = 1.490116e-08)
     return p
 
 def logser_ll(x, p):
@@ -153,26 +184,6 @@ def logser_ll(x, p):
     
     """
     return sum(log(stats.logser.pmf(x, p)))
-
-def trunc_logser_pmf(x, p, upper_bound):
-    """Probability mass function for the upper truncated log-series"""
-    if p < 1:
-        return stats.logser.pmf(x, p) / stats.logser.cdf(upper_bound, p)
-    else:
-        x = np.array(x)
-        ivals = np.arange(1, upper_bound + 1)
-        normalization = sum(p ** ivals / ivals)
-        pmf = (p ** x / x) / normalization
-        return pmf
-
-def trunc_logser_cdf(x_max, p, upper_bound):
-    """Cumulative probability function for the upper truncated log-series"""
-    if p < 1:
-        return stats.logser.cdf(x_max, p) / stats.logser.cdf(upper_bound, p)
-    else:
-        x_list = range(1, int(x_max) + 1)
-        cdf = sum(trunc_logser_pmf(x_list, p, upper_bound))
-        return cdf
 
 def disunif_ll(ab, low, high):
     """Log-likelihood of a discrete uniform distribution with bounds [low, high]"""
