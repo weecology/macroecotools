@@ -7,6 +7,7 @@ from numpy import exp, histogram, log, matlib, sort, sqrt, pi, std, mean
 import numpy as np
 from scipy import integrate, stats, optimize, special
 from scipy.stats import rv_discrete, rv_continuous
+from scipy.integrate import quad
 
 class pln_gen(rv_discrete):
     """Poisson lognormal distribution
@@ -77,11 +78,21 @@ class pln_gen(rv_discrete):
         pmf = []
         for i, x_i in enumerate(x):
             if lower_trunc[i]: # distribution lowered truncated at 1 (not accouting for zero-abundance species)
-                pmf_i = untrunc_pmf(x_i, mu[i], sigma[i]) / (1 - untrunc_pmf(0, mu[i], sigma[i]))
+                if x_i == 0:
+                    pmf_i = 0
+                else:
+                    pmf_i = untrunc_pmf(x_i, mu[i], sigma[i]) / (1 - untrunc_pmf(0, mu[i], sigma[i]))
             else:
                 pmf_i = untrunc_pmf(x_i, mu[i], sigma[i])
             pmf.append(pmf_i)
         return np.array(pmf)
+    
+    def _cdf(self, x, mu, sigma, lower_trunc, approx_cut = 10, full_output = 0):
+        x = np.array(x)
+        cdf = []
+        for x_i in x:
+            cdf.append(sum(self.pmf(range(int(x_i) + 1), mu, sigma, lower_trunc)))
+        return np.array(cdf)
 
     def _argcheck(self, *args):
         return 1
@@ -119,6 +130,31 @@ trunc_logser = trunc_logser_gen(a=1, name='trunc_logser',
                                 """
                                 )
 
+class trunc_exp_gen(rv_continuous):
+    """Lower truncated exponential distribution
+    
+    Scipy based distribution class for the truncated exponential pdf, cdf and rvs
+    
+    Usage:
+    PDF: trunc_exp.pdf(list_of_xvals, lambda, lower_bound)
+    CDF: trunc_exp.cdf(list_of_xvals, lambda, lower_bound)
+    Random Numbers: trunc_exp.rvs(lambda, lower_bound, size=1)
+    
+    """
+    def _pdf(self, x, lmd, lower_bound):
+        x = np.array(x)
+        return lmd * exp(-lmd * x) / exp(-lmd * lower_bound)
+    
+    def _cdf(self, x, lmd, lower_bound):
+        x = np.array(x)
+        cdf = []
+        for x_i in x:
+            cdf.append(quad(self._pdf, lower_bound, x_i, args = (lmd, lower_bound))[0])
+        return np.array(cdf)
+    
+    def _argcheck(self, *args):
+        return 1
+ 
 def pln_ll(x, mu, sigma, lower_trunc = True, full_output = 0):
     """Log-likelihood of a truncated Poisson lognormal distribution
     
