@@ -143,10 +143,22 @@ class trunc_expon_gen(rv_continuous):
     
     """
     def _pdf(self, x, lmd, lower_bound):
-        self.a = lower_bound
         x = np.array(x)
-        return lmd * exp(-lmd * (x - lower_bound))
+        pdf = []
+        for i, x_i in enumerate(x):
+            if x_i < lower_bound[i]:
+                pdf.append(0)
+            else:
+                pdf.append(lmd[i] * exp(-lmd[i] * (x_i - lower_bound[i])))
+        return np.array(pdf)
     
+    def _cdf(self, x, lmd, lower_bound):
+        x = np.array(x)
+        cdf = []
+        for i, x_i in enumerate(x):
+            cdf.append(1 - exp(-lmd[i] * (max(0, x_i - lower_bound[i]))))
+        return np.array(cdf)
+        
     def _argcheck(self, *args):
         return 1
 
@@ -172,6 +184,20 @@ class trunc_pareto_gen(rv_continuous):
 trunc_pareto = trunc_pareto_gen(name = 'trunc_pareto', longname = 'Lower truncated Pareto', 
                                 shapes = 'b, lower_bound')
     
+class trunc_weibull_gen(rv_continuous):
+    """Lower truncated Weibull distribution"""
+    def _pdf(self, x, k, lmd, lower_bound):
+        self.a = lower_bound
+        x = np.array(x)
+        pdf = k / lmd * (x / lmd) ** (k - 1) * exp(-(x / lmd) ** k) / exp(-(lower_bound / lmd) ** k)
+        return pdf
+    
+    def _argcheck(self, *args):
+        return 1
+
+trunc_weibull = trunc_weibull_gen(name = 'trunc_weibull', longname = 'Lower truncated Weibull', 
+                                  shapes = 'k, lmd, lower_bound')
+            
 def pln_ll(x, mu, sigma, lower_trunc = True, full_output = 0):
     """Log-likelihood of a truncated Poisson lognormal distribution
     
@@ -213,6 +239,10 @@ def logser_ll(x, p, upper_trunc = False, upper_bound = None):
         return sum(trunc_logser.logpmf(x, p, upper_bound))
     else:
         return sum(stats.logser.logpmf(x, p))
+
+def trunc_weibull_ll(x, k, lmd, lower_bound):
+    """Log-likelihood of the Weibull distributed lower truncated at lower_bound"""
+    return sum(trunc_weibull.logpdf(x, k, lmd, lower_bound))
 
 def disunif_ll(ab, low, high):
     """Log-likelihood of a discrete uniform distribution with bounds [low, high]"""
