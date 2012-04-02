@@ -144,26 +144,21 @@ class trunc_expon_gen(rv_continuous):
     """
     def _pdf(self, x, lmd, lower_bound):
         x = np.array(x)
-        pdf = []
-        for i, x_i in enumerate(x):
-            if x_i < lower_bound[i]:
-                pdf.append(0)
-            else:
-                pdf.append(lmd[i] * exp(-lmd[i] * (x_i - lower_bound[i])))
-        return np.array(pdf)
+        return lmd * exp(-lmd * (x - lower_bound))
     
     def _cdf(self, x, lmd, lower_bound):
         x = np.array(x)
-        cdf = []
-        for i, x_i in enumerate(x):
-            cdf.append(1 - exp(-lmd[i] * (max(0, x_i - lower_bound[i]))))
-        return np.array(cdf)
-        
+        return 1 - exp(-lmd * (x - lower_bound))
+
     def _argcheck(self, *args):
-        return 1
+        self.a = args[1]
+        self.xa = args[1]
+        self.xb = 10 ** 10 # xb is arbitrarily set to a large number
+        cond = args[0] > 0
+        return cond
     
 # Currently the upper bound of searching xb is set arbitrarily to 10**10 for all distributions.
-trunc_expon = trunc_expon_gen(xa = 0, xb = 10 ** 10, name = 'trunc_expon', longname = 'Lower truncated exponential',
+trunc_expon = trunc_expon_gen(name = 'trunc_expon', longname = 'Lower truncated exponential',
                               shapes = 'lmd, lower_bound')
 
 class trunc_pareto_gen(rv_continuous):
