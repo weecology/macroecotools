@@ -154,7 +154,7 @@ class trunc_expon_gen(rv_continuous):
         self.a = args[1]
         self.xa = args[1]
         self.xb = 10 ** 10 # xb is arbitrarily set to a large number
-        cond = args[0] > 0
+        cond = (args[0] > 0) & (args[1] >= 0)
         return cond
     
 # Currently the upper bound of searching xb is set arbitrarily to 10**10 for all distributions.
@@ -193,12 +193,18 @@ trunc_pareto = trunc_pareto_gen(name = 'trunc_pareto', longname = 'Lower truncat
 class trunc_weibull_gen(rv_continuous):
     """Lower truncated Weibull distribution"""
     def _pdf(self, x, k, lmd, lower_bound):
-        self.a = lower_bound
         x = np.array(x)
-        pdf = k / lmd * (x / lmd) ** (k - 1) * exp(-(x / lmd) ** k) / exp(-(lower_bound / lmd) ** k)
+        pdf = stats.frechet_r.pdf(x, k, scale = lmd) / (1 - stats.frechet_r.cdf(lower_bound, k, scale = lmd))
         return pdf
     
+    def _cdf(self, x, k, lmd, lower_bound):
+        x = np.array(x)
+        cdf = (stats.frechet_r.cdf(x, k, scale = lmd) 
+               - stats.frechet_r.cdf(lower_bound, k, scale = lmd)) / (1 - stats.frechet_r.cdf(lower_bound, k, scale = lmd))
+        return cdf
+    
     def _argcheck(self, *args):
+        self.a = args[2]
         return 1
 
 trunc_weibull = trunc_weibull_gen(name = 'trunc_weibull', longname = 'Lower truncated Weibull', 
