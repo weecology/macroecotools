@@ -174,22 +174,20 @@ class trunc_pareto_gen(rv_continuous):
     """
     def _pdf(self, x, b, lower_bound):
         x = np.array(x)
-        pdf = []
-        for i, x_i in enumerate(x):
-            if x_i < lower_bound[i]:
-                pdf.append(0)
-            else:
-                pdf.append(b[i] * lower_bound[i] ** b[i] / x_i ** (b[i] + 1))
-        return np.array(pdf)
+        return b * lower_bound ** b / x ** (b + 1)
     
     def _cdf(self, x, b, lower_bound):
         x = np.array(x)
-        cdf = []
-        for i, x_i in enumerate(x):
-            cdf.append(max(0, 1 - (lower_bound[i] / x_i) ** b[i]))
-        return np.array(cdf)
+        return 1 - (lower_bound / x) ** b
+    
+    def _argcheck(self, *args):
+        self.a = args[1]
+        self.xa = args[1]
+        self.xb = 10 ** 10
+        cond = (args[0] > 0) & (args[1] > 0)
+        return cond
 
-trunc_pareto = trunc_pareto_gen(xa = 0, xb = 10 ** 10, name = 'trunc_pareto', longname = 'Lower truncated Pareto', 
+trunc_pareto = trunc_pareto_gen(name = 'trunc_pareto', longname = 'Lower truncated Pareto', 
                                 shapes = 'b, lower_bound')
     
 class trunc_weibull_gen(rv_continuous):
