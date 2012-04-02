@@ -97,7 +97,8 @@ class pln_gen(rv_discrete):
     def _argcheck(self, *args):
         return 1
     
-pln = pln_gen(name='pln', longname='Poisson lognormal')
+pln = pln_gen(name='pln', longname='Poisson lognormal', 
+              shapes = 'mu, sigma, lower_trunc')
 
 class trunc_logser_gen(rv_discrete):
     """Upper truncated logseries distribution
@@ -130,7 +131,7 @@ trunc_logser = trunc_logser_gen(a=1, name='trunc_logser',
                                 """
                                 )
 
-class trunc_exp_gen(rv_continuous):
+class trunc_expon_gen(rv_continuous):
     """Lower truncated exponential distribution
     
     Scipy based distribution class for the truncated exponential pdf, cdf and rvs
@@ -142,19 +143,16 @@ class trunc_exp_gen(rv_continuous):
     
     """
     def _pdf(self, x, lmd, lower_bound):
+        self.a = lower_bound
         x = np.array(x)
-        return lmd * exp(-lmd * x) / exp(-lmd * lower_bound)
-    
-    def _cdf(self, x, lmd, lower_bound):
-        x = np.array(x)
-        cdf = []
-        for x_i in x:
-            cdf.append(quad(self._pdf, lower_bound, x_i, args = (lmd, lower_bound))[0])
-        return np.array(cdf)
+        return lmd * exp(-lmd * (x - lower_bound))
     
     def _argcheck(self, *args):
         return 1
- 
+
+trunc_expon = trunc_expon_gen(name = 'trunc_expon', longname = 'Lower truncated exponential',
+                              shapes = 'lmd, lower_bound')
+
 def pln_ll(x, mu, sigma, lower_trunc = True, full_output = 0):
     """Log-likelihood of a truncated Poisson lognormal distribution
     
