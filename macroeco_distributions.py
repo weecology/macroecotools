@@ -153,6 +153,25 @@ class trunc_expon_gen(rv_continuous):
 trunc_expon = trunc_expon_gen(name = 'trunc_expon', longname = 'Lower truncated exponential',
                               shapes = 'lmd, lower_bound')
 
+class trunc_pareto_gen(rv_continuous):
+    """Lower truncated Pareto (power) distribution
+    
+    Scipy based distribution class for the truncated exponential pdf, cdf and rvs
+    
+    Usage:
+    PDF: trunc_pareto.pdf(list_of_xvals, b, lower_bound)
+    CDF: trunc_pareto.cdf(list_of_xvals, b, lower_bound)
+    Random Numbers: trunc_exp.rvs(b, lower_bound, size=1)
+    
+    """
+    def _pdf(self, x, b, lower_bound):
+        self.a = lower_bound
+        x = np.array(x)
+        return b * lower_bound ** b / x ** (b + 1)
+
+trunc_pareto = trunc_pareto_gen(name = 'trunc_pareto', longname = 'Lower truncated Pareto', 
+                                shapes = 'b, lower_bound')
+    
 def pln_ll(x, mu, sigma, lower_trunc = True, full_output = 0):
     """Log-likelihood of a truncated Poisson lognormal distribution
     
@@ -268,13 +287,22 @@ def trunc_logser_solver(ab):
                         min((sys.float_info[0] / S) ** (1 / N), 2), xtol = 1.490116e-08)
     return p
 
-def trunc_expon_solver(x, lower_trunc):
+def trunc_expon_solver(x, lower_bound):
     """Given a random sample and lower bound, 
     
     solve for MLE of lower truncated exponential distribution lmd.
     
     """
-    return 1 / (np.mean(np.array(x)) - lower_trunc)
+    return 1 / (np.mean(np.array(x)) - lower_bound)
+
+def trunc_pareto_solver(x, lower_bound):
+    """Given a random sample and lower bound,
+    
+    solve for MLE of lower truncated Pareto distribution b. 
+    
+    """
+    x = np.array(x)
+    return len(x) / sum(log(x) - log(lower_bound))
 
 def negbin_solver(ab):
     """Given abundance data, solve for MLE of negative binomial parameters n and p"""
