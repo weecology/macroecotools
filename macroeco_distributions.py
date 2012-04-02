@@ -268,6 +268,14 @@ def trunc_logser_solver(ab):
                         min((sys.float_info[0] / S) ** (1 / N), 2), xtol = 1.490116e-08)
     return p
 
+def trunc_expon_solver(x, lower_trunc):
+    """Given a random sample and lower bound, 
+    
+    solve for MLE of lower truncated exponential distribution lmd.
+    
+    """
+    return 1 / (np.mean(np.array(x)) - lower_trunc)
+
 def negbin_solver(ab):
     """Given abundance data, solve for MLE of negative binomial parameters n and p"""
     mu = np.mean(ab)
