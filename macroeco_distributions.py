@@ -161,8 +161,9 @@ class trunc_expon_gen(rv_continuous):
         
     def _argcheck(self, *args):
         return 1
-
-trunc_expon = trunc_expon_gen(name = 'trunc_expon', longname = 'Lower truncated exponential',
+    
+# Currently the upper bound of searching xb is set arbitrarily to 10**10 for all distributions.
+trunc_expon = trunc_expon_gen(xa = 0, xb = 10 ** 10, name = 'trunc_expon', longname = 'Lower truncated exponential',
                               shapes = 'lmd, lower_bound')
 
 class trunc_pareto_gen(rv_continuous):
@@ -177,11 +178,23 @@ class trunc_pareto_gen(rv_continuous):
     
     """
     def _pdf(self, x, b, lower_bound):
-        self.a = lower_bound
         x = np.array(x)
-        return b * lower_bound ** b / x ** (b + 1)
+        pdf = []
+        for i, x_i in enumerate(x):
+            if x_i < lower_bound[i]:
+                pdf.append(0)
+            else:
+                pdf.append(b[i] * lower_bound[i] ** b[i] / x_i ** (b[i] + 1))
+        return np.array(pdf)
+    
+    def _cdf(self, x, b, lower_bound):
+        x = np.array(x)
+        cdf = []
+        for i, x_i in enumerate(x):
+            cdf.append(max(0, 1 - (lower_bound[i] / x_i) ** b[i]))
+        return np.array(cdf)
 
-trunc_pareto = trunc_pareto_gen(name = 'trunc_pareto', longname = 'Lower truncated Pareto', 
+trunc_pareto = trunc_pareto_gen(xa = 0, xb = 10 ** 10, name = 'trunc_pareto', longname = 'Lower truncated Pareto', 
                                 shapes = 'b, lower_bound')
     
 class trunc_weibull_gen(rv_continuous):
