@@ -3,7 +3,7 @@
 from __future__ import division
 import sys
 from math import factorial, floor
-from numpy import exp, histogram, log, matlib, sort, sqrt, pi, std, mean
+from numpy import exp, histogram, log, matlib, sort, pi, std, mean
 import numpy as np
 from scipy import integrate, stats, optimize, special
 from scipy.stats import rv_discrete, rv_continuous
@@ -360,7 +360,7 @@ def trunc_weibull_solver(x, lower_bound):
     x = np.array(x)
     def weibull_k(k):
         return 1 / (sum(x ** k * log(x)) / sum(x ** k) - 1 / len(x) * sum(log(x))) - k
-    k0 = optimize.bisect(weibull_k, 0, 1) # Initial guess based on MLE for untruncated; Johnson et al. p656
+    k0 = optimize.bisect(weibull_k, 0, 10 ** 5) # Initial guess based on MLE for untruncated; Johnson et al. p656
     lmd0 = (sum(x ** k0) / len(x)) ** (1 / k0)
     def weibull_func(x): 
         return -trunc_weibull_ll(x, x[0], x[1], lower_bound)
