@@ -194,7 +194,9 @@ class trunc_weibull_gen(rv_continuous):
     """Lower truncated Weibull distribution"""
     def _pdf(self, x, k, lmd, lower_bound):
         x = np.array(x)
-        pdf = stats.frechet_r.pdf(x, k, scale = lmd) / (1 - stats.frechet_r.cdf(lower_bound, k, scale = lmd))
+        pdf = k / lmd * (x / lmd) ** (k - 1) * exp(-(x / lmd) ** k) / exp(-(lower_bound / lmd) ** k)
+        #Alternative way of formulating pdf (same results, speed might differ):
+        #pdf = stats.frechet_r.pdf(x, k, scale = lmd) / (1 - stats.frechet_r.cdf(lower_bound, k, scale = lmd))
         return pdf
     
     def _cdf(self, x, k, lmd, lower_bound):
@@ -205,7 +207,10 @@ class trunc_weibull_gen(rv_continuous):
     
     def _argcheck(self, *args):
         self.a = args[2]
-        return 1
+        self.xa = args[2]
+        self.xb = 10 ** 10
+        cond = (args[0] > 0) & (args[1] > 0) & (args[2] >= 0)
+        return cond
 
 trunc_weibull = trunc_weibull_gen(name = 'trunc_weibull', longname = 'Lower truncated Weibull', 
                                   shapes = 'k, lmd, lower_bound')
@@ -345,6 +350,22 @@ def trunc_pareto_solver(x, lower_bound):
     """
     x = np.array(x)
     return len(x) / sum(log(x) - log(lower_bound))
+
+def trunc_weibull_solver(x, lower_bound):
+    """Given a random sample and lower bound,
+    
+    solve for MLE of lower truncated weibull distribution parameters k and lmd.
+    
+    """
+    x = np.array(x)
+    def weibull_k(k):
+        return 1 / (sum(x ** k * log(x)) / sum(x ** k) - 1 / len(x) * sum(log(x))) - k
+    k0 = optimize.bisect(weibull_k, 0, 1) # Initial guess based on MLE for untruncated; Johnson et al. p656
+    lmd0 = (sum(x ** k0) / len(x)) ** (1 / k0)
+    def weibull_func(x): 
+        return -trunc_weibull_ll(x, x[0], x[1], lower_bound)
+    k, lmd = optimize.fmin(weibull_func, x0 = [k0, lmd0], disp = 0)
+    return k, lmd
 
 def negbin_solver(ab):
     """Given abundance data, solve for MLE of negative binomial parameters n and p"""
