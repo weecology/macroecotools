@@ -9,6 +9,7 @@ from scipy import integrate, stats, optimize, special
 from scipy.stats import rv_discrete, rv_continuous
 from scipy.integrate import quad
 
+#._rvs method is not currently available for pln.
 class pln_gen(rv_discrete):
     """Poisson lognormal distribution
     
