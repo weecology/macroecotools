@@ -143,12 +143,13 @@ class trunc_expon_gen(rv_continuous):
     
     """
     def _pdf(self, x, lmd, lower_bound):
-        x = np.array(x)
-        return lmd * exp(-lmd * (x - lower_bound))
+        return stats.expon.pdf(x, scale = 1/lmd, loc = lower_bound)
     
     def _cdf(self, x, lmd, lower_bound):
-        x = np.array(x)
-        return 1 - exp(-lmd * (x - lower_bound))
+        return stats.expon.cdf(x, scale = 1/lmd, loc = lower_bound)
+    
+    def _rvs(self, lmd, lower_bound):
+        return stats.expon.rvs(scale = 1/lmd, loc = lower_bound, size = self._size)
 
     def _argcheck(self, *args):
         self.a = args[1]
@@ -173,12 +174,14 @@ class trunc_pareto_gen(rv_continuous):
     
     """
     def _pdf(self, x, b, lower_bound):
-        x = np.array(x)
-        return b * lower_bound ** b / x ** (b + 1)
+        return stats.pareto.pdf(x, b, scale = lower_bound)
     
     def _cdf(self, x, b, lower_bound):
-        x = np.array(x)
-        return 1 - (lower_bound / x) ** b
+        return stats.pareto.cdf(x, b, scale = lower_bound)
+    
+    def _rvs(self, b, lower_bound):
+        rand_num = stats.pareto.rvs(b, scale = lower_bound, size = self._size)
+        return rand_num
     
     def _argcheck(self, *args):
         self.a = args[1]
@@ -205,6 +208,15 @@ class trunc_weibull_gen(rv_continuous):
                - stats.frechet_r.cdf(lower_bound, k, scale = lmd)) / (1 - stats.frechet_r.cdf(lower_bound, k, scale = lmd))
         return cdf
     
+    def _rvs(self, k, lmd, lower_bound):
+        rand_num = stats.frechet_r.rvs(k, scale = lmd, size = self._size)
+        rand_num = rand_num[rand_num >= lower_bound]
+        while (len(rand_num) < self._size):
+            rand_new = stats.frechet_r.rvs(k, scale = lmd)
+            if rand_new >= lower_bound:
+                rand_num = np.append(rand_num, rand_new)
+        return rand_num
+    
     def _argcheck(self, *args):
         self.a = args[2]
         self.xa = args[2]
@@ -214,7 +226,7 @@ class trunc_weibull_gen(rv_continuous):
 
 trunc_weibull = trunc_weibull_gen(name = 'trunc_weibull', longname = 'Lower truncated Weibull', 
                                   shapes = 'k, lmd, lower_bound')
-            
+
 def pln_ll(x, mu, sigma, lower_trunc = True, full_output = 0):
     """Log-likelihood of a truncated Poisson lognormal distribution
     
