@@ -363,22 +363,6 @@ def trunc_pareto_solver(x, lower_bound):
     x = np.array(x)
     return len(x) / sum(log(x) - log(lower_bound))
 
-def trunc_weibull_solver(x, lower_bound):
-    """Given a random sample and lower bound,
-    
-    solve for MLE of lower truncated weibull distribution parameters k and lmd.
-    
-    """
-    x = np.array(x)
-    def weibull_k(k):
-        return 1 / (sum(x ** k * log(x)) / sum(x ** k) - 1 / len(x) * sum(log(x))) - k
-    k0 = optimize.bisect(weibull_k, 0, 10 ** 5) # Initial guess based on MLE for untruncated; Johnson et al. p656
-    lmd0 = (sum(x ** k0) / len(x)) ** (1 / k0)
-    def weibull_func(x): 
-        return -trunc_weibull_ll(x, x[0], x[1], lower_bound)
-    k, lmd = optimize.fmin(weibull_func, x0 = [k0, lmd0], disp = 0)
-    return k, lmd
-
 def negbin_solver(ab):
     """Given abundance data, solve for MLE of negative binomial parameters n and p"""
     mu = np.mean(ab)
