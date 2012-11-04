@@ -2,7 +2,7 @@
 
 from __future__ import division
 import sys
-from math import factorial, floor
+from math import factorial, floor, sqrt
 from numpy import exp, histogram, log, matlib, sort, pi, std, mean
 import numpy as np
 from scipy import integrate, stats, optimize, special
