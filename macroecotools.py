@@ -190,6 +190,11 @@ def obs_pred_rsquare(obs, pred):
     """
     return 1 - sum((obs - pred) ** 2) / sum((obs - np.mean(obs)) ** 2)
 
+def obs_pred_mse(obs, pred):
+    """Calculate the mean squared error of the prediction given observation."""
+    
+    return sum((obs - pred) ** 2) / len(obs)
+
 def comp_ed (spdata1,abdata1,spdata2,abdata2):
     """Calculate the compositional Euclidean Distance between two sites
     
