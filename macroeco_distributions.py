@@ -138,9 +138,9 @@ class trunc_expon_gen(rv_continuous):
     Scipy based distribution class for the truncated exponential pdf, cdf and rvs
     
     Usage:
-    PDF: trunc_exp.pdf(list_of_xvals, lambda, lower_bound)
-    CDF: trunc_exp.cdf(list_of_xvals, lambda, lower_bound)
-    Random Numbers: trunc_exp.rvs(lambda, lower_bound, size=1)
+    PDF: trunc_expon.pdf(list_of_xvals, lambda, lower_bound)
+    CDF: trunc_expon.cdf(list_of_xvals, lambda, lower_bound)
+    Random Numbers: trunc_expon.rvs(lambda, lower_bound, size=1)
     
     """
     def _pdf(self, x, lmd, lower_bound):
