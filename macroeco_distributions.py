@@ -240,6 +240,11 @@ class trunc_geom_gen(rv_discrete):
         cdf = (1 - (1 - p) ** x) / (1 - (1 - p) ** upper_bound)
         return cdf
     
+    def _ppf(self, cdf, p, upper_bound):
+        cdf = np.array(cdf)
+        x = np.log(1 - cdf * (1 - (1 - p) ** upper_bound)) / np.log(1 - p)
+        return np.ceil(x)
+    
     def _rvs(self, p, upper_bound):
         rand_num = stats.geom.rvs(p, size = self._size)
         rand_num = rand_num[rand_num <= upper_bound]
