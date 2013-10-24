@@ -15,5 +15,5 @@ setup(name = 'macroecotools',
       url = 'https://github.com/weecology/macroecotools',
       packages = ['macroecotools', 'macroeco_distributions'],
       license = 'MIT',
-      long_description = read('README'),
+      long_description = read('README.md'),
 )
