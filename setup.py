@@ -16,4 +16,5 @@ setup(name = 'macroecotools',
       packages = ['macroecotools', 'macroeco_distributions'],
       license = 'MIT',
       long_description = read('README.md'),
+      install_requires = ['numpy>=1.6', 'scipy>=0.12']
 )
