@@ -54,6 +54,14 @@ def get_rad_from_cdf(cdf, S):
     cdf evaluated at 1 / S * (Rank - 0.5) to the nearest integer
     
     """
+def get_emp_cdf(dat):
+    """Compute the empirical cdf given a list or an array"""
+    dat = np.array(dat)
+    emp_cdf = []
+    for point in dat:
+        point_cdf = len(dat[dat < point]) / len(dat)
+        emp_cdf.append(point_cdf)
+    return np.array(emp_cdf)
 
 def plot_rad(Ns):
     """Plot a rank-abundance distribution based on a vector of abundances"""

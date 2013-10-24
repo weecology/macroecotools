@@ -228,6 +228,39 @@ class trunc_weibull_gen(rv_continuous):
 trunc_weibull = trunc_weibull_gen(name = 'trunc_weibull', longname = 'Lower truncated Weibull', 
                                   shapes = 'k, lmd, lower_bound')
 
+class trunc_geom_gen(rv_discrete):
+    """Upper truncated geometric distribution"""
+    def _pmf(self, x, p, upper_bound):
+        x = np.array(x)
+        pdf = (1 - p) ** (x - 1) * p / (1 - (1 - p) ** upper_bound)
+        return pdf
+    
+    def _cdf(self, x, p, upper_bound):
+        x = np.array(x)
+        cdf = (1 - (1 - p) ** x) / (1 - (1 - p) ** upper_bound)
+        return cdf
+    
+    def _ppf(self, cdf, p, upper_bound):
+        cdf = np.array(cdf)
+        x = np.log(1 - cdf * (1 - (1 - p) ** upper_bound)) / np.log(1 - p)
+        return np.ceil(x)
+    
+    def _rvs(self, p, upper_bound):
+        rand_num = stats.geom.rvs(p, size = self._size)
+        rand_num = rand_num[rand_num <= upper_bound]
+        while (len(rand_num) < self._size):
+            rand_new = stats.frechet_r.rvs(p)
+            if rand_new <= upper_bound:
+                rand_num = np.append(rand_num, rand_new)
+        return rand_num
+    
+    def _argcheck(self, p, upper_bound):
+        cond = (p > 0) & (upper_bound >= 1) 
+        return cond
+
+trunc_geom = trunc_geom_gen(name = 'trunc_geom', longname = 'Upper truncated geometric', 
+                                  shapes = 'p, upper_bound')
+
 def pln_ll(x, mu, sigma, lower_trunc = True, full_output = 0):
     """Log-likelihood of a truncated Poisson lognormal distribution
     
