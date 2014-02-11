@@ -7,6 +7,7 @@ from numpy import exp, histogram, log, matlib, sort, pi, std, mean
 import numpy as np
 from scipy import integrate, stats, optimize, special
 from scipy.stats import rv_discrete, rv_continuous
+from scipy.optimize import bisect
 from scipy.integrate import quad
 
 #._rvs method is not currently available for pln.
@@ -114,14 +115,38 @@ class trunc_logser_gen(rv_discrete):
     """
     def _pmf(self, x, p, upper_bound):
         x = np.array(x)
-        if p < 1:
+        #return stats.logser.pmf(x, p) / stats.logser.cdf(upper_bound, p)
+        if p[0] < 1:
             return stats.logser.pmf(x, p) / stats.logser.cdf(upper_bound, p)
         else:
-            x = np.array(x)
-            ivals = np.arange(1, upper_bound + 1)
-            normalization = sum(p ** ivals / ivals)
-            pmf = (p ** x / x) / normalization
+            ivals = np.arange(1, upper_bound[0] + 1)
+            normalization = sum(p[0] ** ivals / ivals)
+            pmf = (p[0] ** x / x) / normalization
             return pmf
+
+    def _cdf(self, x, p, upper_bound):
+        x = np.array(x)
+        if p[0] < 1:
+            return stats.logser.cdf(x, p) / stats.logser.cdf(upper_bound, p)
+        else:
+            cdf_list = [sum(self.pmf(range(1, int(x_i) + 1), p[0], upper_bound[0])) for x_i in x]
+            return np.array(cdf_list)
+    
+    def _rvs(self, p, upper_bound):
+        out = []
+        if p < 1:
+            for i in range(self._size):
+                rand_logser = stats.logser.rvs(p)
+                while rand_logser > upper_bound:
+                    rand_logser = stats.logser.rvs(p)
+                out.append(rand_logser)
+        else:
+            rand_list = stats.uniform.rvs(size = self._size)
+            for rand_num in rand_list:
+                y = lambda x: self.cdf(x, p, upper_bound) - rand_num
+                if y(1) > 0: out.append(1)
+                else: out.append(int(round(bisect(y, 1, upper_bound))))
+        return np.array(out)
 
 trunc_logser = trunc_logser_gen(a=1, name='trunc_logser',
                                 longname='Upper truncated logseries',
