@@ -59,7 +59,7 @@ def get_emp_cdf(dat):
     dat = np.array(dat)
     emp_cdf = []
     for point in dat:
-        point_cdf = len(dat[dat < point]) / len(dat)
+        point_cdf = len(dat[dat <= point]) / len(dat)
         emp_cdf.append(point_cdf)
     return np.array(emp_cdf)
 
