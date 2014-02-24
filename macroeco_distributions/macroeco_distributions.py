@@ -274,7 +274,7 @@ class trunc_geom_gen(rv_discrete):
         rand_num = stats.geom.rvs(p, size = self._size)
         rand_num = rand_num[rand_num <= upper_bound]
         while (len(rand_num) < self._size):
-            rand_new = stats.frechet_r.rvs(p)
+            rand_new = stats.geom.rvs(p)
             if rand_new <= upper_bound:
                 rand_num = np.append(rand_num, rand_new)
         return rand_num
