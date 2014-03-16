@@ -4,6 +4,13 @@ from pandas import Series, DataFrame
 from numpy import array, array_equal
 from macroecotools import *
 
+comp_data = DataFrame({'site': [1, 1, 2, 3, 3, 3, 4],
+                       'year': [1, 2, 1, 1, 1, 2, 2],
+                       'genus': ['a', 'a', 'a', 'a', 'a', 'd', 'f'],
+                       'species': ['b', 'b', 'b', 'b', 'c', 'e', 'g'],
+                       'spid': ['ab', 'ab', 'ab', 'ab', 'ac', 'de', 'fg'],
+                       'counts': [1, 2, 5, 5, 4, 3, 10]})
+
 def test_combined_spID_multiple_str():
     """Test combining multiple strings in a single species identifiers"""
     assert combined_spID("fam", "gen", "sp") == "famgensp"
@@ -38,3 +45,23 @@ def test_combined_spID_arrays():
     ids2 = array(['sp1', 'sp1', 'sp2', 'sp3'])
     combined_ids = array(['gen1sp1', 'gen1sp1', 'gen2sp2', 'gen2sp3'])
     assert array_equal(combined_ids, combined_spID(ids1, ids2))
+
+def test_richness_in_group_single_spid_single_group():
+    """Test richness_in_group with a single species identifier column, one group"""
+    richness = DataFrame({'site': [1, 2, 3, 4], 'richness': [1, 1, 3, 1]},
+                         columns=['site', 'richness'])
+    assert richness.equals(richness_in_group(comp_data, ['spid'], ['site']))
+
+def test_richness_in_group_multiple_spid_single_group():
+    """Test richness_in_group with a multiple species id columns, one group"""
+    richness = DataFrame({'site': [1, 2, 3, 4], 'richness': [1, 1, 3, 1]},
+                         columns=['site', 'richness'])
+    assert richness.equals(richness_in_group(comp_data, ['genus', 'species'], ['site']))
+
+def test_richness_in_group_multiple_groups():
+    """Test richness_in_group with a multiple groups"""
+    richness = DataFrame({'site': [1, 1, 2, 3, 3, 4],
+                          'year': [1, 2, 1, 1, 2, 2],
+                          'richness': [1, 1, 1, 2, 1, 1]},
+                         columns=['site', 'year', 'richness'])
+    assert richness.equals(richness_in_group(comp_data, ['spid'], ['site', 'year']))
