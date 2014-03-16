@@ -5,6 +5,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import colorsys
 from numpy import log10
+import pandas
+import numpy
 
 def AICc(k, L, n):
     """Computes the corrected Akaike Information Criterion. 
@@ -253,3 +255,35 @@ def calc_comp_eds(ifile, fout):
                 ed = comp_ed (spdata1,abdata1,spdata2,abdata2)
                 results = np.column_stack((usites[i], usites[a], ed))
                 fout.writerows(results)
+
+def combined_spID(*species_identifiers):
+    """Return a single column unique species identifier
+
+    Creates a unique species identifier based on one or more columns of a
+    data frame that represent the unique species ID.
+
+    Args:
+        species_identifiers: A tuple containing one or pieces of a unique
+            species identifier or lists of these pieces.
+
+    Returns:
+        A single unique species identifier or a list of single identifiers
+
+    """
+
+    # Make standard input data types capable of element wise summation
+    input_type = type(species_identifiers[0])
+    assert input_type in [list, tuple, str, pandas.core.series.Series, numpy.ndarray]
+    if input_type is not str:
+        species_identifiers = [pandas.Series(identifier) for identifier in species_identifiers]
+
+    single_identifier = species_identifiers[0]
+    if len(species_identifiers) > 1:
+        for identifier in species_identifiers[1:]:
+            single_identifier += identifier
+    if input_type == numpy.ndarray:
+        single_identifier = numpy.array(single_identifier)
+    else:
+        single_identifier = input_type(single_identifier)
+    return single_identifier
+
