@@ -1,6 +1,8 @@
 MacroEcoTools
 =============
 
+[![Build Status](https://travis-ci.org/weecology/macroecotools.png)](https://travis-ci.org/weecology/macroecotools)
+
 A collection of tools for some standard macroecological plots and analyses in Python. This is currently a small, poorly documented, module that we use in house. Please let us know if you have any questions (code@weecology.org) and we'll be happy to help.
 
 Acknowledgments
