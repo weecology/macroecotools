@@ -287,7 +287,7 @@ def combined_spID(*species_identifiers):
         single_identifier = input_type(single_identifier)
     return single_identifier
 
-def richness_in_group(composition_data, spid_cols, group_cols):
+def richness_in_group(composition_data, group_cols, spid_cols):
     """Determine the number of species in a grouping (e.g., at each site)
 
     Counts the number of species grouped at one or more levels. For example,
@@ -303,11 +303,11 @@ def richness_in_group(composition_data, spid_cols, group_cols):
         composition_data: A Pandas data frame with one or more columns with
             information on species identity and one or more columns with
             information on the groups, e.g., years or sites.
+        group_cols: A list of strings of the names othe columns in
+            composition_data that hold the grouping fields.
         spid_cols: A list of strings of the names of the columns in
             composition_data that hold the data on species ID. This could be a
             single column with a unique ID or two columns containing the latin binomial.
-        group_cols: A list of strings of the names othe columns in
-            composition_data that hold the grouping fields.
 
     Returns:
         A data frame with the grouping fields and the species richness

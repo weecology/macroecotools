@@ -50,13 +50,13 @@ def test_richness_in_group_single_spid_single_group():
     """Test richness_in_group with a single species identifier column, one group"""
     richness = DataFrame({'site': [1, 2, 3, 4], 'richness': [1, 1, 3, 1]},
                          columns=['site', 'richness'])
-    assert richness.equals(richness_in_group(comp_data, ['spid'], ['site']))
+    assert richness.equals(richness_in_group(comp_data, ['site'], ['spid']))
 
 def test_richness_in_group_multiple_spid_single_group():
     """Test richness_in_group with a multiple species id columns, one group"""
     richness = DataFrame({'site': [1, 2, 3, 4], 'richness': [1, 1, 3, 1]},
                          columns=['site', 'richness'])
-    assert richness.equals(richness_in_group(comp_data, ['genus', 'species'], ['site']))
+    assert richness.equals(richness_in_group(comp_data, ['site'], ['genus', 'species']))
 
 def test_richness_in_group_multiple_groups():
     """Test richness_in_group with a multiple groups"""
@@ -64,7 +64,7 @@ def test_richness_in_group_multiple_groups():
                           'year': [1, 2, 1, 1, 2, 2],
                           'richness': [1, 1, 1, 2, 1, 1]},
                          columns=['site', 'year', 'richness'])
-    assert richness.equals(richness_in_group(comp_data, ['spid'], ['site', 'year']))
+    assert richness.equals(richness_in_group(comp_data, ['site', 'year'], ['spid']))
 
 def test_abundance_in_group_no_abund_col():
     """Test abundance_in_group with no abundance column provided"""
