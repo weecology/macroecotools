@@ -65,3 +65,32 @@ def test_richness_in_group_multiple_groups():
                           'richness': [1, 1, 1, 2, 1, 1]},
                          columns=['site', 'year', 'richness'])
     assert richness.equals(richness_in_group(comp_data, ['spid'], ['site', 'year']))
+
+def test_abundance_in_group_no_abund_col():
+    """Test abundance_in_group with no abundance column provided"""
+    abundance = DataFrame({'site': [1, 2, 3, 4],
+                           'abundance': [2, 1, 3, 1]},
+                           columns=['site', 'abundance'])
+    assert abundance.equals(abundance_in_group(comp_data, ['site']))
+
+def test_abundance_in_group_abund_col():
+    """Test abundance_in_group with a single group and an abundance column"""
+    abundance = DataFrame({'site': [1, 2, 3, 4],
+                           'abundance': [3, 5, 12, 10]},
+                           columns=['site', 'abundance'])
+    assert abundance.equals(abundance_in_group(comp_data, ['site'], ['counts']))
+
+def test_abundance_in_group_multi_group_no_abund_col():
+    """Test abundance_in_group w/multiple group columns and no abundance column"""
+    abundance = DataFrame({'genus': ['a', 'a', 'd', 'f'],
+                           'species': ['b', 'c', 'e', 'g'],
+                           'abundance': [4, 1, 1, 1]},
+                           columns=['genus', 'species', 'abundance'])
+    assert abundance.equals(abundance_in_group(comp_data, ['genus', 'species']))
+
+def test_abundance_in_group_multi_group_abund_col():
+    """Test abundance_in_group w/multiple group columns and an abundance column"""
+    abundance = DataFrame({'genus': ['a', 'a', 'd', 'f'],
+                           'species': ['b', 'c', 'e', 'g'],
+                           'abundance': [13, 4, 3, 10]},
+                           columns=['genus', 'species', 'abundance'])

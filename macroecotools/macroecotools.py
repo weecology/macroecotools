@@ -320,3 +320,40 @@ def richness_in_group(composition_data, spid_cols, group_cols):
     richness = richness.reset_index()
     richness.columns = group_cols + ['richness']
     return richness
+
+def abundance_in_group(composition_data, group_cols, abund_col=None):
+    """Determine the number of individuals in a grouping (e.g., at each site)
+
+    Counts the number of individuals grouped at one or more levels. For example,
+    the number of species occuring at each of a series of sites or in each of
+    a series of genus-species combinations.
+
+    If a combination of grouping variables is not present in the data, then no
+    values will be returned for that combination. In other words, if these
+    missing combinations should be treated as zeros, this will need to be
+    handled elsewhere.
+
+    Args:
+        composition_data: A Pandas data frame with one or more columns with
+            information on species identity and one or more columns with
+            information on the groups, e.g., years or sites, and a column
+            containing the abundance value.
+        group_cols: A list of strings of the names othe columns in
+            composition_data that hold the grouping fields.
+        abund_col: A column containing abundance data. If this column is not
+            provided then it is assumed that the abundances are to be obtained
+            by counting the number of rows in the group (e.g., there is one
+            sample per individual in many ecological datasets)
+
+    Returns:
+        A data frame with the grouping fields and the species richness
+
+    """
+    if abund_col:
+        abundance = composition_data[group_cols + abund_col].groupby(group_cols).sum()
+    else:
+        abundance = composition_data[group_cols].groupby(group_cols).count()
+    abundance = pandas.DataFrame(abundance.iloc[:, 0]) # Get a single count regardless of # of grouping variables
+    abundance.columns = ['abundance']
+    abundance = abundance.reset_index()
+    return abundance
