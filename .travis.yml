@@ -1,0 +1,11 @@
+language: python
+python:
+  - "2.7"
+  - "2.7"
+
+# command to install other dependencies
+install:
+  - python setup.py -q install
+
+# command to run tests
+script: nosetests
