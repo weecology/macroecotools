@@ -12,5 +12,5 @@ setup(name = 'macroecotools',
       url = 'https://github.com/weecology/macroecotools',
       packages = ['macroecotools', 'macroeco_distributions'],
       license = 'MIT',
-      install_requires = ['numpy>=1.6', 'scipy>=0.12']
+      install_requires = ['numpy>=1.6', 'scipy>=0.12', 'pandas>=0.13']
 )
