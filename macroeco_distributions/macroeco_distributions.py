@@ -487,3 +487,17 @@ def yule_solver(ab):
         return -yule_ll(ab, x)
     rho = optimize.fmin(yule_func, x0 = rho0)
     return rho
+
+def xsquare_pdf(x, dist, *pars):
+    """Calculates the pdf for x, given the distribution of variable Y = sqrt(X) 
+    
+    and a given value x. 
+    
+    """
+    x = np.array(x)
+    return 1 / x ** 0.5 * dist.pdf(x ** 0.5, *pars) / 2 
+
+def ysquareroot_pdf(y, dist, *pars):
+    """Calculates the pdf for y, given the distribution of variable X = Y^2 and a given value y."""
+    y = np.array(y)
+    return 2 * dist.pdf(y ** 2, *pars) * y
