@@ -150,7 +150,7 @@ class trunc_logser_gen(rv_discrete):
 
 trunc_logser = trunc_logser_gen(a=1, name='trunc_logser',
                                 longname='Upper truncated logseries',
-                                shapes="upper_bound",
+                                shapes="p, upper_bound",
                                 extradoc="""Truncated logseries
                                 
                                 Upper truncated logseries distribution
