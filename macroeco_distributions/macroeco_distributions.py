@@ -1,4 +1,30 @@
-"""Probability and Likelihood Functions for Distribution Testing"""
+"""Probability and Likelihood Functions for Distribution Testing
+
+Probability distributions
+    Poisson lognormal distribution
+    Upper truncated logseries distribution
+    Lower truncated exponential distribution
+    Lower truncated Pareto (power) distribution
+    Lower truncated Weibull distribution
+    Upper truncated geometric distribution (without zeros)
+    Upper truncated geometric distribution (with zeros)
+    Generalized Yule distribution
+    Original Yule distribution
+    
+    
+Likelihood functions
+    Log-likelihood truncated Poisson lognormal distribution
+    Log-likelihood logseries distribution
+    Log-likelihood lower truncated Weibull distribution
+    Log-likelihood of a discrete uniform distribution with bounds [low, high]
+    Log-likelihood of a geomtric distribution
+    Log-likelihood of a negative binomial dstribution (truncated at 1)
+    Log-likelihood of a discrete gamma distribution
+    Log-likelihood of the generalized Yule distribution
+    Log-likelihood of the original Yule-Simon distribution
+    
+
+"""
 
 from __future__ import division
 import sys
@@ -355,7 +381,7 @@ def logser_ll(x, p, upper_trunc = False, upper_bound = None):
         return sum(stats.logser.logpmf(x, p))
 
 def trunc_weibull_ll(x, k, lmd, lower_bound):
-    """Log-likelihood of the Weibull distributed lower truncated at lower_bound"""
+    """Log-likelihood of the Weibull distribution lower truncated at lower_bound"""
     return sum(trunc_weibull.logpdf(x, k, lmd, lower_bound))
 
 def disunif_ll(ab, low, high):
@@ -364,7 +390,7 @@ def disunif_ll(ab, low, high):
     return n * log(1 / (high - low + 1))
 
 def geom_ll(ab, p):
-    """Log-likelihood of a geomtric distribution"""
+    """Log-likelihood of a geometric distribution"""
     return sum(stats.geom.logpmf(ab, p))
 
 def negbin_ll(ab, n, p):
