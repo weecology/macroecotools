@@ -119,7 +119,7 @@ class pln_gen(rv_discrete):
         x = np.array(x)
         cdf = []
         for x_i in x:
-            cdf.append(sum(self.pmf(range(int(x_i) + 1), mu, sigma, lower_trunc)))
+            cdf.append(sum(self.pmf(range(int(x_i) + 1), mu[0], sigma[0], lower_trunc[0])))
         return np.array(cdf)
 
     def _argcheck(self, *args):
