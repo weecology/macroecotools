@@ -88,13 +88,13 @@ class pln_gen(rv_discrete):
                                                        (exp(-x)) * 
                                                        exp(-(log(x) - mu) ** 2 / 
                                                            (2 * sigma ** 2))), 0,
-                                                   ub, full_output = full_output, limit = 100)
+                                                   ub, full_output = full_output, limit = 500)
                     #integrate higher end for accuracy and in case peak moves
                     term2b = integrate.quad(lambda x: ((x ** (x_i - 1)) * 
                                                        (exp(-x)) * exp(-(log(x) - mu) ** 
                                                                        2/ (2 * sigma ** 
                                                                            2))), ub,
-                                                   float('inf'), full_output = full_output, limit = 100)
+                                                   float('inf'), full_output = full_output, limit = 500)
                     Pr = term1 * term2a[0]
                     Pr_add = term1 * term2b[0]  
                     if Pr + Pr_add > 0: 
