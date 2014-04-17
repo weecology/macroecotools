@@ -36,12 +36,16 @@ def aic_weight(AICc_list, n, cutoff = 4):
         
     else:
         AICc_min = min(AICc_list) # Minimum AICc value for the entire list
-        AICc_weights = []
+        relative_likelihoods = []
         
-        for likelihood in AICc_list:
-            delta_AICc = likelihood - AICc_min
+        for AICc in AICc_list:
+            delta_AICc = AICc - AICc_min
             relative_likelihood = np.exp(-(delta_AICc)/2)
-            AICc_weights = AICc_weights + [likelihood, delta_AICc, relative_likelihood]
+            relative_likelihoods.append(relative_likelihood)
+            
+        relative_likelihoods = np.array(relative_likelihoods)
+        
+        AICc_weights = relative_likelihoods / sum(relative_likelihoods)
             
         return(AICc_weights)   
 
