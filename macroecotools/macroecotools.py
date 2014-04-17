@@ -20,28 +20,30 @@ def AICc(k, L, n):
     AICc = 2 * k - 2 * L + 2 * k * (k + 1) / (n - k - 1)
     return AICc
 
-def aic_weight(AICc_dist1, AICc_dist2, n, cutoff = 4):
-    """Computes Akaike weight for one model relative to another
+def aic_weight(AICc_list, n, cutoff = 4):
+    """Computes Akaike weight for one model relative to others
     
     Based on information from Burnham and Anderson (2002).
     
     Keyword arguments:
-    AICc_dist1  --  AICc for primary model of interest
-    AICc_dist2  --  AICc for alternative model
     n           --  number of observations.
     cutoff      --  minimum number of observations required to generate a weight.
+    AICc_list   --  list of AICc values for each model
     
     """
     if n < cutoff:
-        weight = None
+        AICc_weights = None
         
     else:
-        AICc_min = min(AICc_dist1, AICc_dist2)
-        weight_dist1 = np.exp(-(AICc_dist1 - AICc_min) / 2)
-        weight_dist2 = np.exp(-(AICc_dist2 - AICc_min) / 2)
-        weight = weight_dist1 / (weight_dist1 + weight_dist2)  
-      
-    return(weight)   
+        AICc_min = min(AICc_list) # Minimum AICc value for the entire list
+        AICc_weights = []
+        
+        for likelihood in AICc_list:
+            delta_AICc = likelihood - AICc_min
+            relative_likelihood = np.exp(-(delta_AICc)/2)
+            AICc_weights = AICc_weights + [likelihood, delta_AICc, relative_likelihood]
+            
+        return(AICc_weights)   
 
 def get_rad_from_cdf(cdf, S):
     """Return a predicted rank-abundance distribution from a theoretical CDF
