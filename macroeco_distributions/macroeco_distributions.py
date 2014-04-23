@@ -84,17 +84,10 @@ class pln_gen(rv_discrete):
                         ub = x_i
                     term1 = ((2 * pi * sigma ** 2) ** -0.5)/ factorial(x_i)
                     #integrate low end where peak is so it finds peak
-                    term2a = integrate.quad(lambda x: ((x ** (x_i - 1)) * 
-                                                       (exp(-x)) * 
-                                                       exp(-(log(x) - mu) ** 2 / 
-                                                           (2 * sigma ** 2))), 0,
-                                                   ub, full_output = full_output, limit = 500)
+                    eq = lambda t: np.exp(t * x_i - np.exp(t) - (t - mu) ** 2 / 2 / (sigma ** 2))
+                    term2a = integrate.quad(eq, -float('inf'), np.log(ub), full_output = full_output, limit = 500)
                     #integrate higher end for accuracy and in case peak moves
-                    term2b = integrate.quad(lambda x: ((x ** (x_i - 1)) * 
-                                                       (exp(-x)) * exp(-(log(x) - mu) ** 
-                                                                       2/ (2 * sigma ** 
-                                                                           2))), ub,
-                                                   float('inf'), full_output = full_output, limit = 500)
+                    term2b = integrate.quad(eq, np.log(ub), float('inf'), full_output = full_output, limit = 500)
                     Pr = term1 * term2a[0]
                     Pr_add = term1 * term2b[0]  
                     if Pr + Pr_add > 0: 
