@@ -512,12 +512,19 @@ def gen_yule_solver(ab):
     return a, b
 
 def yule_solver(ab):
-    """Given abundance data, solve for MLE of original Yule distribution parameter rho"""
+    """Given abundance data, solve for MLE of original Yule distribution parameter rho
+    
+    Algorithm from Garcia 2011.
+    
+    """
     rho0 = np.mean(ab) / (np.mean(ab) - 1)
-    def yule_func(x):
-        return -yule_ll(ab, x)
-    rho = optimize.fmin(yule_func, x0 = rho0)
-    return rho
+    tol = 1.490116e-08
+    loop_end = False
+    while not loop_end:
+        rho1 = len(ab) / sum([sum([1 / (rho0 + j) for j in range(1, k+1)]) for k in ab])
+        loop_end = (abs(rho1 - rho0) < tol)
+        rho0 = rho1
+    return rho1
 
 def xsquare_pdf(x, dist, *pars):
     """Calculates the pdf for x, given the distribution of variable Y = sqrt(X) 
