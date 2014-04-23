@@ -450,6 +450,18 @@ def trunc_logser_solver(ab):
                         min((sys.float_info[0] / S) ** (1 / N), 2), xtol = 1.490116e-08)
     return p
 
+def trunc_geom_solver(ab, upper_bound):
+    """Given abundance data, solve for MLE of upper-truncated geometric distribution parameter p"""
+    BOUNDS = [0, 1]
+    DIST_FROM_BOUND = 10 ** -10
+    S = len(ab)
+    N = sum(ab)
+    y = lambda x: N * (S-1) * (1-x) * x ** upper_bound + \
+        S * x ** upper_bound + N * (1-x) - S
+    one_minus_p = optimize.bisect(y, 1 - S / N, BOUNDS[1] - DIST_FROM_BOUND, 
+                                  xtol = 1.490116e-08)
+    return 1 - one_minus_p
+
 def trunc_expon_solver(x, lower_bound):
     """Given a random sample and lower bound, 
     
