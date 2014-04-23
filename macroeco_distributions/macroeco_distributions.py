@@ -502,14 +502,27 @@ def dis_gamma_solver(ab):
     return k, theta 
 
 def gen_yule_solver(ab):
-    """Given abundance data, solve for MLE of generalized Yule distribution parameters a and b"""
-    p1 = ab.count(1) / len(ab)
-    a0 = 1                    
-    b0 = p1 / (1-p1) * a0  # Initial guess based on expected frequency of singletons. NOT STABLE. 
-    def gen_yule_func(x):
-        return -gen_yule_ll(ab, x[0], x[1])
-    a, b = optimize.fmin(gen_yule_func, x0 = [a0, b0])
-    return a, b
+    """Given abundance data, solve for MLE of generalized Yule distribution parameters a and b(rho)
+    
+    Algorithm extended from Garcia 2011.
+    
+    """
+    a0 = 1
+    rho0 = np.mean(ab) / (np.mean(ab) - 1)
+    tol = 1.490116e-08
+    loop_end = False
+    count_one = len([k for k in ab if k == 1])
+    ab_not_one = [k for k in ab if k != 1]
+    while not loop_end:
+        rho1 = len(ab) / sum([sum([1 / (rho0 + j + a0) for j in range(0, k)]) for k in ab])
+        func_a = lambda a: 1 / (a + rho1) * count_one + sum([1 / (a+rho1+k-1) - \
+                                                             sum([rho1/(a+rho1+m)/(a+m) for m in range(0, k - 1)])\
+                                                             for k in ab_not_one])
+        a1 = optimize.newton(func_a, a0, maxiter = 500)
+        loop_end = (abs(rho1 - rho0) < tol) * (abs(a1 - a0) < tol)
+        rho0 = rho1
+        a0 = a1
+    return a1, rho1
 
 def yule_solver(ab):
     """Given abundance data, solve for MLE of original Yule distribution parameter rho
