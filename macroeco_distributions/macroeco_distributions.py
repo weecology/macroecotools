@@ -458,8 +458,8 @@ def trunc_geom_solver(ab, upper_bound):
     N = sum(ab)
     y = lambda x: N * (S-1) * (1-x) * x ** upper_bound + \
         S * x ** upper_bound + N * (1-x) - S
-    one_minus_p = optimize.bisect(y, 1 - S / N, BOUNDS[1] - DIST_FROM_BOUND, 
-                                  xtol = 1.490116e-08)
+    one_minus_p = optimize.bisect(y, 0, BOUNDS[1] - DIST_FROM_BOUND, 
+                                  xtol = 1.490116e-16)
     return 1 - one_minus_p
 
 def trunc_expon_solver(x, lower_bound):
