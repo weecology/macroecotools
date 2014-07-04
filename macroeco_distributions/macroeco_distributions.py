@@ -52,7 +52,7 @@ class pln_gen(rv_discrete):
     (http://www.nceas.ucsb.edu/projects/11121)
     
     """    
-    def _pmf(self, x, mu, sigma, lower_trunc, approx_cut = 10, full_output = 0):
+    def _pmf(self, x, mu, sigma, lower_trunc, approx_cut = 10):
         def untrunc_pmf(x_i, mu, sigma):
             pmf_i = 1e-120
             if sigma > 0:
@@ -85,9 +85,9 @@ class pln_gen(rv_discrete):
                     term1 = ((2 * pi * sigma ** 2) ** -0.5)/ factorial(x_i)
                     #integrate low end where peak is so it finds peak
                     eq = lambda t: np.exp(t * x_i - np.exp(t) - (t - mu) ** 2 / 2 / (sigma ** 2))
-                    term2a = integrate.quad(eq, -float('inf'), np.log(ub), full_output = full_output, limit = 500)
+                    term2a = integrate.quad(eq, -float('inf'), np.log(ub), full_output = 0, limit = 500)
                     #integrate higher end for accuracy and in case peak moves
-                    term2b = integrate.quad(eq, np.log(ub), float('inf'), full_output = full_output, limit = 500)
+                    term2b = integrate.quad(eq, np.log(ub), float('inf'), full_output = 0, limit = 500)
                     Pr = term1 * term2a[0]
                     Pr_add = term1 * term2b[0]  
                     if Pr + Pr_add > 0: 
@@ -108,7 +108,7 @@ class pln_gen(rv_discrete):
             pmf.append(pmf_i)
         return np.array(pmf)
     
-    def _cdf(self, x, mu, sigma, lower_trunc, approx_cut = 10, full_output = 0):
+    def _cdf(self, x, mu, sigma, lower_trunc, approx_cut = 10):
         x = np.array(x)
         cdf = []
         for x_i in x:
@@ -331,7 +331,7 @@ trunc_geom_with_zeros = trunc_geom_with_zeros_gen(name = 'trunc_geom_with_zeros'
                                                   longname = 'Upper truncated geometric with zeros', 
                                                   shapes = 'p, upper_bound')
 
-def pln_ll(x, mu, sigma, lower_trunc = True, full_output = 0):
+def pln_ll(x, mu, sigma, lower_trunc = True):
     """Log-likelihood of a truncated Poisson lognormal distribution
     
     Method derived from Bulmer 1974 Biometrics 30:101-110    
@@ -352,7 +352,7 @@ def pln_ll(x, mu, sigma, lower_trunc = True, full_output = 0):
     cts = histogram(x, bins = range(1, max(x) + 2))
     observed_abund_vals = cts[1][cts[0] != 0]
     counts = cts[0][cts[0] != 0]
-    plik = pln.logpmf(observed_abund_vals, mu, sigma, lower_trunc, full_output = full_output)
+    plik = pln.logpmf(observed_abund_vals, mu, sigma, lower_trunc)
     lik_list = np.array([], dtype = float)
     for i, count in enumerate(counts):
         lik_list = np.append(lik_list, count * plik[i])
@@ -434,7 +434,7 @@ def pln_solver(ab, lower_trunc = True):
     mu0 = mean(log(ab))
     sig0 = std(log(ab))
     def pln_func(x): 
-        return -pln_ll(ab, x[0], x[1], lower_trunc, full_output = 1)
+        return -pln_ll(ab, x[0], x[1], lower_trunc)
     mu, sigma = optimize.fmin(pln_func, x0 = [mu0, sig0], disp = 0)
     return mu, sigma
 
