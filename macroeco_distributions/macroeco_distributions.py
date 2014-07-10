@@ -411,7 +411,7 @@ def gen_yule_ll(ab, a, rho):
     where a = 1. 
     
     """
-    ll = len(ab) * (log(rho) + log(special.gamma(a + rho)) - log(special.gamma(a)))
+    ll = len(ab) * (log(rho) + special.gammaln(a + rho) - special.gammaln(a))
     for ab_i in ab: 
         ll += special.gammaln(a + ab_i -1) - special.gammaln(a + rho + ab_i)
     return ll
