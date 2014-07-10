@@ -388,7 +388,7 @@ def geom_ll(ab, p):
 
 def negbin_ll(ab, n, p):
     """Log-likelihood of a negative binomial dstribution (truncated at 1)"""
-    return sum(log(stats.nbinom.pmf(ab, n, p) / (1 - stats.nbinom.pmf(0, n, p))))
+    return sum(stats.nbinom.logpmf(ab, n, p)) - len(ab) * log(1 - stats.nbinom.pmf(0, n, p))
 
 def dis_gamma_ll(ab, k, theta):
     """Log-likelihood of a discrete gamma distribution
@@ -403,18 +403,17 @@ def dis_gamma_ll(ab, k, theta):
     C = 1 / gamma_sum
     return sum(log(stats.gamma.pdf(ab, k, scale = theta) * C))
 
-def gen_yule_ll(ab, a, b):
+def gen_yule_ll(ab, a, rho):
     """Log-likelihood of the Yule-Simon distribution.
     
     Follow the configuration of generalized Yule distribution in Nee 2003. 
-    The configuration on wikipedia and in Simon 1955 is the species case 
-    where a = 1 and b = rho. 
+    The configuration on wikipedia and in Simon 1955 is the special case 
+    where a = 1. 
     
     """
-    ll = 0
+    ll = len(ab) * (log(rho) + log(special.gamma(a + rho)) + log(special.gamma(a)))
     for ab_i in ab: 
-        ll += log(b * special.gamma(a + b) * special.gamma(a + ab_i - 1) / 
-                  special.gamma(a) /  special.gamma(a + b + ab_i))
+        ll += special.gammaln(a + ab_i -1) - special.gammaln(a + rho + ab_i)
     return ll
 
 def yule_ll(ab, rho):
@@ -505,6 +504,7 @@ def gen_yule_solver(ab):
     
     Algorithm extended from Garcia 2011.
     
+    
     """
     a0 = 1
     rho0 = np.mean(ab) / (np.mean(ab) - 1)
@@ -512,17 +512,22 @@ def gen_yule_solver(ab):
     loop_end = False
     count_one = len([k for k in ab if k == 1])
     ab_not_one = [k for k in ab if k != 1]
-    while not loop_end:
+    max_iter = 500 # maximum number of iterations 
+    j = 0
+    while (not loop_end) and (j < max_iter):
         rho1 = len(ab) / sum([sum([1 / (rho0 + j + a0) for j in range(0, k)]) for k in ab])
         func_a = lambda a: 1 / (a + rho1) * count_one + sum([1 / (a+rho1+k-1) - \
                                                              sum([rho1/(a+rho1+m)/(a+m) for m in range(0, k - 1)])\
                                                              for k in ab_not_one])
         a1 = optimize.newton(func_a, a0, maxiter = 500)
         loop_end = (abs(rho1 - rho0) < tol) * (abs(a1 - a0) < tol)
-        rho0 = rho1
-        a0 = a1
-    return a1, rho1
-
+        a0, rho0 = a1, rho1
+        j += 1
+    if j < max_iter: return a1, rho1
+    else: 
+        print "Failed to converge."
+        return None, None
+    
 def yule_solver(ab):
     """Given abundance data, solve for MLE of original Yule distribution parameter rho
     
