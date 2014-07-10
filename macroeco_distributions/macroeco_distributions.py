@@ -512,9 +512,9 @@ def gen_yule_solver(ab):
     loop_end = False
     count_one = len([k for k in ab if k == 1])
     ab_not_one = [k for k in ab if k != 1]
-    max_iter = 500 # maximum number of iterations 
-    j = 0
-    while (not loop_end) and (j < max_iter):
+    max_iter = 1000 # maximum number of iterations 
+    i = 0
+    while (not loop_end) and (i < max_iter):
         rho1 = len(ab) / sum([sum([1 / (rho0 + j + a0) for j in range(0, k)]) for k in ab])
         func_a = lambda a: 1 / (a + rho1) * count_one + sum([1 / (a+rho1+k-1) - \
                                                              sum([rho1/(a+rho1+m)/(a+m) for m in range(0, k - 1)])\
@@ -522,8 +522,8 @@ def gen_yule_solver(ab):
         a1 = optimize.newton(func_a, a0, maxiter = 500)
         loop_end = (abs(rho1 - rho0) < tol) * (abs(a1 - a0) < tol)
         a0, rho0 = a1, rho1
-        j += 1
-    if j < max_iter: return a1, rho1
+        i += 1
+    if i < max_iter: return a1, rho1
     else: 
         print "Failed to converge."
         return None, None
