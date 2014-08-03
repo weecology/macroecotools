@@ -519,7 +519,10 @@ def gen_yule_solver(ab):
         func_a = lambda a: 1 / (a + rho1) * count_one + sum([1 / (a+rho1+k-1) - \
                                                              sum([rho1/(a+rho1+m)/(a+m) for m in range(0, k - 1)])\
                                                              for k in ab_not_one])
-        a1 = optimize.newton(func_a, a0, maxiter = 500)
+        try:
+            a1 = optimize.newton(func_a, a0, maxiter = 500)
+        except: RuntimeError:
+            pass
         loop_end = (abs(rho1 - rho0) < tol) * (abs(a1 - a0) < tol)
         a0, rho0 = a1, rho1
         i += 1
