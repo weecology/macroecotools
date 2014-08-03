@@ -521,7 +521,7 @@ def gen_yule_solver(ab):
                                                              for k in ab_not_one])
         try:
             a1 = optimize.newton(func_a, a0, maxiter = 500)
-        except: RuntimeError:
+        except RuntimeError:
             pass
         loop_end = (abs(rho1 - rho0) < tol) * (abs(a1 - a0) < tol)
         a0, rho0 = a1, rho1
