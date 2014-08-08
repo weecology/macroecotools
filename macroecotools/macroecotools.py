@@ -358,8 +358,8 @@ def abundance_in_group(composition_data, group_cols, abund_col=None):
     if abund_col:
         abundance = composition_data[group_cols + abund_col].groupby(group_cols).sum()
     else:
-        abundance = composition_data[group_cols].groupby(group_cols).count()
-    abundance = pandas.DataFrame(abundance.iloc[:, 0]) # Get a single count regardless of # of grouping variables
+        abundance = composition_data[group_cols].groupby(group_cols).size()
+    abundance = pandas.DataFrame(abundance)
     abundance.columns = ['abundance']
     abundance = abundance.reset_index()
     return abundance
