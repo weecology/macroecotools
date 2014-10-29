@@ -78,26 +78,21 @@ class pln_gen(rv_discrete):
                     # peak apppears to be just below ab - for very small ab (ab<10)
                     # works better to leave entire peak in one integral and integrate 
                     # the tail in the second integral
-                    log_term1_partial = x_i * mu + (x_i * sigma) ** 2 / 2 - 0.5 * log(2 * pi * sigma ** 2)
-                    if x_i == 0:
-                        ub = 1
-                        log_term1 = log_term1_partial
+                    if x_i < 10:
+                        ub = 10
                     else:
-                        log_term1 = log_term1_partial - sum(log(range(1, int(x_i) + 1)))
-                        if x_i < 10: ub = 10
-                        else: ub = x_i
+                        ub = x_i                    
+                    term1 = ((2 * pi * sigma ** 2) ** -0.5)/ factorial(x_i)
                     #integrate low end where peak is so it finds peak
-                    eq = lambda t: np.exp(- np.exp(t) - (t - mu - x_i * sigma ** 2) ** 2 / 2 / (sigma ** 2))
-                    term2a = integrate.quad(eq, -float('inf'), np.log(ub), full_output = 1, limit = 500, 
-                                            epsabs = 1e-16, epsrel = 1e-16)
+                    eq = lambda t: np.exp(t * x_i - np.exp(t) - ((t - mu) / sigma) ** 2 / 2)
+                    term2a = integrate.quad(eq, -np.inf, np.log(ub), full_output = 0, limit = 500)
                     #integrate higher end for accuracy and in case peak moves
-                    term2b = integrate.quad(eq, np.log(ub), float('inf'), full_output = 1, limit = 500,
-                                            epsabs = 1e-16, epsrel = 1e-16)                    
-                    Pr_full = exp(log_term1 + log(term2a[0] + term2b[0]))
-                    if Pr_full > 0: 
+                    term2b = integrate.quad(eq, np.log(ub), np.inf, full_output = 0, limit = 500)
+                    Pr = term1 * (term2a[0] + term2b[0])
+                    if Pr > 0: 
                     #likelihood shouldn't really be zero and causes problem taking 
                     #log of it
-                        pmf_i = Pr_full  
+                        pmf_i = Pr  
             return pmf_i  
         
         pmf = []
@@ -438,7 +433,7 @@ def pln_solver(ab, lower_trunc = True):
     sig0 = std(log(ab))
     def pln_func(x): 
         return -pln_ll(ab, x[0], x[1], lower_trunc)
-    mu, sigma = optimize.fmin(pln_func, x0 = [mu0, sig0], disp = 0)
+    mu, sigma = optimize.fmin_bfgs(pln_func, x0 = [mu0, sig0], disp = 0)
     return mu, sigma
 
 def trunc_logser_solver(ab):
