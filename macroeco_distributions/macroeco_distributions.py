@@ -117,7 +117,7 @@ class pln_gen(rv_discrete):
     def _rvs(self, n, mu, sigma, lower_trunc):
         if not lower_trunc:
             pois_par = np.exp(stats.norm.rvs(loc = mu, scale = sigma, size = n))
-            ab = stats.poisson.rvs(pois_par, size = 10)
+            ab = stats.poisson.rvs(pois_par, size = n)
         else:
             ab = []
             while len(ab) < n:
