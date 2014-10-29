@@ -113,6 +113,18 @@ class pln_gen(rv_discrete):
         for x_i in x:
             cdf.append(sum(self.pmf(range(int(x_i) + 1), mu[0], sigma[0], lower_trunc[0])))
         return np.array(cdf)
+    
+    def _rvs(self, n, mu, sigma, lower_trunc):
+        if not lower_trunc:
+            pois_par = np.exp(stats.norm.rvs(loc = mu, scale = sigma, size = n))
+            ab = stats.poisson.rvs(pois_par, size = 10)
+        else:
+            ab = []
+            while len(ab) < n:
+                pois_par = np.exp(stats.norm.rvs(loc = mu, scale = sigma))
+                ab_single = stats.poisson.rvs(pois_par)
+                if ab_single: ab.append(ab_single)
+        return np.array(ab)
 
     def _argcheck(self, *args):
         return 1
