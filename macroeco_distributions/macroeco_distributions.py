@@ -81,19 +81,18 @@ class pln_gen(rv_discrete):
                     if x_i < 10:
                         ub = 10
                     else:
-                        ub = x_i
+                        ub = x_i                    
                     term1 = ((2 * pi * sigma ** 2) ** -0.5)/ factorial(x_i)
                     #integrate low end where peak is so it finds peak
-                    eq = lambda t: np.exp(t * x_i - np.exp(t) - (t - mu) ** 2 / 2 / (sigma ** 2))
-                    term2a = integrate.quad(eq, -float('inf'), np.log(ub), full_output = 0, limit = 500)
+                    eq = lambda t: np.exp(t * x_i - np.exp(t) - ((t - mu) / sigma) ** 2 / 2)
+                    term2a = integrate.quad(eq, -np.inf, np.log(ub), full_output = 0, limit = 500)
                     #integrate higher end for accuracy and in case peak moves
-                    term2b = integrate.quad(eq, np.log(ub), float('inf'), full_output = 0, limit = 500)
-                    Pr = term1 * term2a[0]
-                    Pr_add = term1 * term2b[0]  
-                    if Pr + Pr_add > 0: 
+                    term2b = integrate.quad(eq, np.log(ub), np.inf, full_output = 0, limit = 500)
+                    Pr = term1 * (term2a[0] + term2b[0])
+                    if Pr > 0: 
                     #likelihood shouldn't really be zero and causes problem taking 
                     #log of it
-                        pmf_i = Pr + Pr_add  
+                        pmf_i = Pr  
             return pmf_i  
         
         pmf = []
@@ -114,6 +113,18 @@ class pln_gen(rv_discrete):
         for x_i in x:
             cdf.append(sum(self.pmf(range(int(x_i) + 1), mu[0], sigma[0], lower_trunc[0])))
         return np.array(cdf)
+    
+    def _rvs(self, n, mu, sigma, lower_trunc):
+        if not lower_trunc:
+            pois_par = np.exp(stats.norm.rvs(loc = mu, scale = sigma, size = n))
+            ab = stats.poisson.rvs(pois_par, size = n)
+        else:
+            ab = []
+            while len(ab) < n:
+                pois_par = np.exp(stats.norm.rvs(loc = mu, scale = sigma))
+                ab_single = stats.poisson.rvs(pois_par)
+                if ab_single: ab.append(ab_single)
+        return np.array(ab)
 
     def _argcheck(self, *args):
         return 1
@@ -434,7 +445,7 @@ def pln_solver(ab, lower_trunc = True):
     sig0 = std(log(ab))
     def pln_func(x): 
         return -pln_ll(ab, x[0], x[1], lower_trunc)
-    mu, sigma = optimize.fmin(pln_func, x0 = [mu0, sig0], disp = 0)
+    mu, sigma = optimize.fmin_bfgs(pln_func, x0 = [mu0, sig0], disp = 0)
     return mu, sigma
 
 def trunc_logser_solver(ab):
