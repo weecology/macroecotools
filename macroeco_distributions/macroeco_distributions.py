@@ -22,7 +22,7 @@ Likelihood functions
     Log-likelihood of a discrete gamma distribution
     Log-likelihood of the generalized Yule distribution
     Log-likelihood of the original Yule-Simon distribution
-    
+    Log-likelihood of the Zipf distribution with x_min = 1
 
 """
 
@@ -431,6 +431,10 @@ def yule_ll(ab, rho):
     """Log-likelihood of the original Yule-Simon distribution."""
     return gen_yule_ll(ab, 1, rho)
 
+def zipf_ll(ab, a):
+    """Log-likelihood of the Zipf distribution with x_min = 1."""
+    return sum(stats.zipf.logpmf(ab, a))
+
 def pln_solver(ab, lower_trunc = True):
     """Given abundance data, solve for MLE of pln parameters mu and sigma
     
@@ -558,6 +562,14 @@ def yule_solver(ab):
         rho0 = rho1
     return rho1
 
+def zipf_solver(ab):
+    """Obtain the MLE parameter for a Zipf distribution with x_min = 1."""
+    par0 = 1 + len(ab) / (sum(np.log(2 * np.array(ab))))
+    def zipf_func(x):
+        return -zipf_ll(ab, x)
+    par = optimize.fmin(zipf_func, x0 = par0)[0]
+    return par
+    
 def xsquare_pdf(x, dist, *pars):
     """Calculates the pdf for x, given the distribution of variable Y = sqrt(X) 
     
