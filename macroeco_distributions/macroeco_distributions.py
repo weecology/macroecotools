@@ -17,7 +17,8 @@ Likelihood functions
     Log-likelihood logseries distribution
     Log-likelihood lower truncated Weibull distribution
     Log-likelihood of a discrete uniform distribution with bounds [low, high]
-    Log-likelihood of a geomtric distribution
+    Log-likelihood of an untruncated geometric distribution
+    Log-likelihood of an upper-truncated geometric distribution
     Log-likelihood of a negative binomial dstribution (truncated at 1)
     Log-likelihood of a discrete gamma distribution
     Log-likelihood of the generalized Yule distribution
@@ -396,6 +397,10 @@ def disunif_ll(ab, low, high):
 def geom_ll(ab, p):
     """Log-likelihood of a geometric distribution"""
     return sum(stats.geom.logpmf(ab, p))
+
+def trunc_geom_ll(ab, p, upper_bound):
+    """Log-likelhood of an upper-truncated geometric distribution"""
+    return geom_ll(ab, p) - len(ab) * stats.geom.logcdf(upper_bound, p)
 
 def negbin_ll(ab, n, p):
     """Log-likelihood of a negative binomial dstribution (truncated at 1)"""
