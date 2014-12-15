@@ -325,6 +325,7 @@ def richness_in_group(composition_data, group_cols, spid_cols):
     richness = composition_data.groupby(group_cols)._spid.nunique()
     richness = richness.reset_index()
     richness.columns = group_cols + ['richness']
+    del composition_data['_spid']
     return richness
 
 def abundance_in_group(composition_data, group_cols, abund_col=None):
