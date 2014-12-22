@@ -115,6 +115,16 @@ class pln_gen(rv_discrete):
             cdf.append(sum(self.pmf(range(int(x_i) + 1), mu[0], sigma[0], lower_trunc[0])))
         return np.array(cdf)
     
+    def _ppf(self, cdf, mu, sigma, lower_trunc, approx_cut = 10):
+        cdf = np.array(cdf)
+        ppf = []
+        for cdf_i in cdf:
+            ppf_i = 1
+            while self.cdf(ppf_i, mu, sigma, lower_trunc, approx_cut = approx_cut) < cdf_i:
+                ppf_i += 1
+            ppf.append(ppf_i)
+        return np.array(ppf)
+    
     def _rvs(self, n, mu, sigma, lower_trunc):
         if not lower_trunc:
             pois_par = np.exp(stats.norm.rvs(loc = mu, scale = sigma, size = n))
