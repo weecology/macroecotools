@@ -34,7 +34,7 @@ from numpy import exp, histogram, log, matlib, sort, pi, std, mean
 import numpy as np
 from scipy import integrate, stats, optimize, special
 from scipy.stats import rv_discrete, rv_continuous
-from scipy.optimize import bisect
+from scipy.optimize import bisect, fsolve
 from scipy.integrate import quad
 
 #._rvs method is not currently available for pln.
@@ -352,6 +352,36 @@ class trunc_geom_with_zeros_gen(rv_discrete):
 trunc_geom_with_zeros = trunc_geom_with_zeros_gen(name = 'trunc_geom_with_zeros', 
                                                   longname = 'Upper truncated geometric with zeros', 
                                                   shapes = 'p, upper_bound')
+
+class nbinom_lower_trunc_gen(rv_discrete):
+    """Negative binomial distribution lower-truncated at 1"""
+    def _pmf(self, x, n, p):
+        pmf = stats.nbinom.pmf(x, n, p) / (1 - stats.nbinom.pmf(0, n, p))
+        return pmf
+    
+    def _cdf(self, x, n, p):
+        x = np.array(x)
+        cdf = (stats.nbinom.cdf(x, n, p) - stats.nbinom.pmf(0, n, p)) / (1 - stats.nbinom.pmf(0, n, p))
+        return np.array(cdf)
+    
+    def _ppf(self, cdf, n, p):
+        cdf = np.array(cdf)
+        if len(cdf) > 1: n, p = n[0], p[0]
+        ppf = []
+        for cdf_i in cdf:
+            ppf_i = 1
+            while self.cdf(ppf_i, n, p) < cdf_i:
+                ppf_i += 1
+            ppf.append(ppf_i)
+        return np.array(ppf)
+    
+    def _argcheck(self, n, p):
+        cond = (n > 0) & (0 < p) & ( p < 1) 
+        return cond
+
+nbinom_lower_trunc = nbinom_lower_trunc_gen(name = 'nbinom_lower_trunc', 
+                                                  longname = 'Negative binomial truncated at 1', 
+                                                  shapes = 'n, p')
 
 def pln_ll(x, mu, sigma, lower_trunc = True):
     """Log-likelihood of a truncated Poisson lognormal distribution
