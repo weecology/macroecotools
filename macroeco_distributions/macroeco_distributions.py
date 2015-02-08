@@ -375,6 +375,10 @@ class nbinom_lower_trunc_gen(rv_discrete):
             ppf.append(ppf_i)
         return np.array(ppf)
     
+    def _rvs(self, n, p):
+        cdf_list = stats.uniform.rvs(size = self._size)
+        return self.ppf(cdf_list, n, p)
+                        
     def _argcheck(self, n, p):
         cond = (n > 0) & (0 < p) & ( p < 1) 
         return cond
