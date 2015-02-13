@@ -125,13 +125,13 @@ class pln_gen(rv_discrete):
             ppf.append(ppf_i)
         return np.array(ppf)
     
-    def _rvs(self, n, mu, sigma, lower_trunc):
+    def _rvs(self, mu, sigma, lower_trunc):
         if not lower_trunc:
-            pois_par = np.exp(stats.norm.rvs(loc = mu, scale = sigma, size = n))
-            ab = stats.poisson.rvs(pois_par, size = n)
+            pois_par = np.exp(stats.norm.rvs(loc = mu, scale = sigma, size = self._size))
+            ab = stats.poisson.rvs(pois_par, size = self._size)
         else:
             ab = []
-            while len(ab) < n:
+            while len(ab) < self._size:
                 pois_par = np.exp(stats.norm.rvs(loc = mu, scale = sigma))
                 ab_single = stats.poisson.rvs(pois_par)
                 if ab_single: ab.append(ab_single)
