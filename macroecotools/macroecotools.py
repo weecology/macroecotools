@@ -8,6 +8,18 @@ from numpy import log10
 import pandas
 import numpy
 
+def AIC(k, L):
+    """Computes the Akaike Information Criterion.
+
+    Keyword arguments:
+    L  --  log likelihood value of given distribution.
+    k  --  number of fitted parameters.
+
+    """
+    AIC = 2 * k - 2 * L
+    return AIC
+
+
 def AICc(k, L, n):
     """Computes the corrected Akaike Information Criterion. 
     
