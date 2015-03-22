@@ -61,19 +61,42 @@ def aic_weight(AICc_list, n, cutoff = 4):
             
         return(AICc_weights)   
 
-def get_rad_from_cdf(cdf, S):
+def get_pred_iterative(cdf_obs, dist, *pars):
+    """Function to get predicted abundances (reverse-sorted) for distributions with no analytical ppf."""
+    cdf_obs = np.sort(cdf_obs)
+    abundance  = list(np.empty([len(cdf_obs)]))
+    j = 0
+    cdf_cum = 0
+    i = 1
+    while j < len(cdf_obs):
+        cdf_cum += dist.pmf(i, *pars)
+        while cdf_cum >= cdf_obs[j]:
+            abundance[j] = i
+            j += 1
+            if j == len(cdf_obs):
+                abundance.reverse()
+                return np.array(abundance)
+        i += 1
+
+def get_rad_from_cdf(dist, S, *args):
     """Return a predicted rank-abundance distribution from a theoretical CDF
     
     Keyword arguments:
-    cdf -- a function characterizing the theoretical cdf (likely from pylab)
+    dist -- a distribution class
     S -- the number of species for which the RAD should be predicted. Should
     match the number of species in the community if comparing to empirical data.
+    args -- arguments for dist
     
     Finds the predicted rank-abundance distribution that results from a
     theoretical cumulative distribution function, by rounding the value of the
     cdf evaluated at 1 / S * (Rank - 0.5) to the nearest integer
     
     """
+    emp_cdf = [(S - i + 0.5) / S for i in range(1, S + 1)]
+    try: rad = int(np.round(dist.ppf(emp_cdf, *args)))
+    except: rad = get_pred_iterative(emp_cdf, dist, *args)
+    return np.array(rad)            
+        
 def get_emp_cdf(dat):
     """Compute the empirical cdf given a list or an array"""
     dat = np.array(dat)
