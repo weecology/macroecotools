@@ -106,6 +106,36 @@ def get_emp_cdf(dat):
         emp_cdf.append(point_cdf)
     return np.array(emp_cdf)
 
+def hist_pmf(xs, pmf, bins):
+    """Create a histogram based on a probability mass function
+
+    Creates a histogram by combining the pmf values inside a series of bins
+
+    Args:
+        xs: Array-like list of x values that the pmf values come from
+        pmf: Array-like list of pmf values associate with the values of x
+        bins: Array-like list of bin edges
+
+    Returns:
+        hist: Array of values of the histogram
+        bin_edges: Array of value of the bin edges
+
+    """
+    xs = np.array(xs)
+    pmf = np.array(pmf)
+    bins = np.array(bins)
+
+    hist = []
+    for lower_edge_index in range(len(bins) - 1):
+        if lower_edge_index + 1 == len(bins):
+            hist.append(sum(pmf[(xs >= bins[lower_edge_index]) &
+                               (xs <= bins[lower_edge_index + 1])]))
+        else:
+            hist.append(sum(pmf[(xs >= bins[lower_edge_index]) &
+                               (xs < bins[lower_edge_index + 1])]))
+    hist = np.array(hist)
+    return (hist, bins)
+
 def plot_rad(Ns):
     """Plot a rank-abundance distribution based on a vector of abundances"""
     Ns.sort(reverse=True)
