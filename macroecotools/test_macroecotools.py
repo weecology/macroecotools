@@ -94,3 +94,4 @@ def test_abundance_in_group_multi_group_abund_col():
                            'species': ['b', 'c', 'e', 'g'],
                            'abundance': [13, 4, 3, 10]},
                            columns=['genus', 'species', 'abundance'])
+    assert abundance.equals(abundance_in_group(comp_data, ['genus', 'species'], ['counts']))
