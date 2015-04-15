@@ -322,10 +322,9 @@ def calc_comp_eds(ifile, fout):
             spdata2 = ifile["species"][ifile["site"] == usites[a]]
             abdata2 = ifile["ab"][ifile["site"] == usites[a]]   
             
-            if len(spdata1) > cutoff and len(spdata2) > cutoff:
-                ed = comp_ed (spdata1,abdata1,spdata2,abdata2)
-                results = np.column_stack((usites[i], usites[a], ed))
-                fout.writerows(results)
+            ed = comp_ed (spdata1,abdata1,spdata2,abdata2)
+            results = np.column_stack((usites[i], usites[a], ed))
+            fout.writerows(results)
 
 def combined_spID(*species_identifiers):
     """Return a single column unique species identifier
