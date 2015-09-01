@@ -197,7 +197,7 @@ def count_pts_within_radius(x, y, radius, logscale=0):
     #http://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.KDTree.query_ball_point.html
     #instead of doing the subset based on the circle    
     unique_points = set([(x[i], y[i]) for i in range(len(x))])
-        
+    count_data = []    
     for a, b in unique_points:
         if logscale == 1:
             num_neighbors = len(x[((log10(x) - log10(a)) ** 2 +
