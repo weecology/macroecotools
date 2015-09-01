@@ -7,6 +7,7 @@ import colorsys
 from numpy import log10
 import pandas
 import numpy
+import math
 
 def AIC(k, L):
     """Computes the Akaike Information Criterion.
@@ -183,23 +184,20 @@ def plot_SARs(list_of_A_and_S):
     plt.hold(False)
     plt.xlabel('Area')
     plt.ylabel('Richness')
-    
+
+def points_on_circle(center, radius, n = 100):
+    """Generate n equally spaced points on a circle, given its center and radius."""
+    x0, y0 = center
+    points = [(math.cos(2 * math.pi / n * x) * radius + x0, math.sin(2 * math.pi / n * x) * radius + y0) for x in xrange(0, n + 1)]
+    return points
+
 def count_pts_within_radius(x, y, radius, logscale=0):
     """Count the number of points within a fixed radius in 2D space"""
     #TODO: see if we can improve performance using KDTree.query_ball_point
     #http://docs.scipy.org/doc/scipy/reference/generated/scipy.spatial.KDTree.query_ball_point.html
-    #instead of doing the subset based on the circle
-    raw_data = np.array([x, y])
-    x = np.array(x)
-    y = np.array(y)
-    raw_data = raw_data.transpose()
-    
-    # Get unique data points by adding each pair of points to a set
-    unique_points = set()
-    for xval, yval in raw_data:
-        unique_points.add((xval, yval))
-    
-    count_data = []
+    #instead of doing the subset based on the circle    
+    unique_points = set([(x[i], y[i]) for i in range(len(x))])
+        
     for a, b in unique_points:
         if logscale == 1:
             num_neighbors = len(x[((log10(x) - log10(a)) ** 2 +
