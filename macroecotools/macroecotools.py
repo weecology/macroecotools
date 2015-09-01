@@ -198,7 +198,7 @@ def count_pts_within_radius(x, y, radius, logscale=0):
     #instead of doing the subset based on the circle    
     unique_points = set([(x[i], y[i]) for i in range(len(x))])
     count_data = []
-    logx, logy, logr = log10(x), log10(y), log10(r)
+    logx, logy, logr = log10(x), log10(y), log10(radius)
     for a, b in unique_points:
         if logscale == 1:
             loga, logb = log10(a), log10(b)
