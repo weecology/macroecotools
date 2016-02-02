@@ -406,7 +406,7 @@ def pln_ll(x, mu, sigma, lower_trunc = True):
     x = x[x > 0]
     x.sort()
     cts = histogram(x, bins = range(1, max(x) + 2))
-    observed_abund_vals = cts[1][cts[0] != 0]
+    observed_abund_vals = cts[1][np.where(cts[0] != 0)]
     counts = cts[0][cts[0] != 0]
     plik = pln.logpmf(observed_abund_vals, mu, sigma, lower_trunc)
     lik_list = np.array([], dtype = float)
