@@ -35,6 +35,7 @@ import numpy as np
 from scipy import integrate, stats, optimize, special
 from scipy.stats import rv_discrete, rv_continuous, itemfreq
 from scipy.optimize import bisect, fsolve
+from scipy.special import logit, expit
 from scipy.integrate import quad
 
 #._rvs method is not currently available for pln.
@@ -543,11 +544,12 @@ def negbin_solver(ab):
     mu = np.mean(ab)
     var = np.var(ab, ddof = 1)
     p0 = 1 - mu / var
-    n0 = mu * (1 - p0) / p0
-    def negbin_func(x): 
-        return -negbin_ll(ab, x[0], x[1])
-    n, p = optimize.fmin(negbin_func, x0 = [n0, p0])
-    return n, p
+    logit_p0 = logit(p0)
+    log_n0 = log(mu * (1 - p0) / p0)
+    def negbin_func(x):
+        return -negbin_ll(ab, exp(x[0]), expit(x[1]))
+    log_n, logit_p = optimize.fmin(negbin_func, x0 = [log_n0, logit_p0])
+    return exp(log_n), expit(logit_p)
 
 def dis_gamma_solver(ab):
     """Given abundance data, solve for MLE of discrete gamma parameters k and theta"""
