@@ -405,8 +405,7 @@ def pln_ll(x, mu, sigma, lower_trunc = True):
     x = np.array(x)
     x = x[x > 0]
     uniq_counts = itemfreq(x)
-    unique_vals = [pair[0] for pair in uniq_counts]
-    counts = [pair[1] for pair in uniq_counts]
+    unique_vals, counts = zip(*uniq_counts)
     plik = pln.logpmf(unique_vals, mu, sigma, lower_trunc)
     ll = 0
     for i, count in enumerate(counts):
