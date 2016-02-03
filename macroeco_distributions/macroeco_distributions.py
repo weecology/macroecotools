@@ -33,7 +33,7 @@ from math import factorial, floor, sqrt
 from numpy import exp, histogram, log, matlib, sort, pi, std, mean
 import numpy as np
 from scipy import integrate, stats, optimize, special
-from scipy.stats import rv_discrete, rv_continuous
+from scipy.stats import rv_discrete, rv_continuous, itemfreq
 from scipy.optimize import bisect, fsolve
 from scipy.integrate import quad
 
@@ -404,16 +404,13 @@ def pln_ll(x, mu, sigma, lower_trunc = True):
     #purify abundance vector
     x = np.array(x)
     x = x[x > 0]
-    x.sort()
-    cts = histogram(x, bins = range(1, max(x) + 2))
-    observed_abund_vals = cts[1][cts[0] != 0]
-    counts = cts[0][cts[0] != 0]
-    plik = pln.logpmf(observed_abund_vals, mu, sigma, lower_trunc)
-    lik_list = np.array([], dtype = float)
+    uniq_counts = itemfreq(x)
+    unique_vals, counts = zip(*uniq_counts)
+    plik = pln.logpmf(unique_vals, mu, sigma, lower_trunc)
+    ll = 0
     for i, count in enumerate(counts):
-        lik_list = np.append(lik_list, count * plik[i])
-    ll = sum(lik_list)
-    return ll   
+        ll += count * plik[i]
+    return ll
 
 def logser_ll(x, p, upper_trunc = False, upper_bound = None):
     """Log-likelihood of a logseries distribution
