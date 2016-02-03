@@ -445,7 +445,7 @@ def trunc_geom_ll(ab, p, upper_bound):
 
 def negbin_ll(ab, n, p):
     """Log-likelihood of a negative binomial dstribution (truncated at 1)"""
-    return sum(stats.nbinom.logpmf(ab, n, p)) - len(ab) * log(1 - stats.nbinom.pmf(0, n, p))
+    return sum(stats.nbinom.logpmf(ab, n, p)) - len(ab) * stats.nbinom.logsf(0, n, p)
 
 def dis_gamma_ll(ab, k, theta):
     """Log-likelihood of a discrete gamma distribution
