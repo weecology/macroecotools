@@ -517,7 +517,7 @@ def trunc_geom_solver(ab, upper_bound):
     DIST_FROM_BOUND = 10 ** -10
     S = len(ab)
     N = sum(ab)
-    y = lambda x: (N * (S-1) * (1-x) + S) * x ** upper_bound + N * (1-x) - S
+    y = lambda x: ((S * upper_bound - N) * (1 - x) + S) * x ** upper_bound - S + N * (1 - x)
     one_minus_p = optimize.bisect(y, 1 - S/N - DIST_FROM_BOUND, BOUNDS[1] - DIST_FROM_BOUND, 
                                   xtol = 1.490116e-16)
     return 1 - one_minus_p
