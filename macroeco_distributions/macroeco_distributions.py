@@ -499,6 +499,15 @@ def pln_solver(ab, lower_trunc = True):
     mu, sigma = optimize.fmin_bfgs(pln_func, x0 = [mu0, sig0], disp = 0)
     return mu, sigma
 
+def logser_solver(ab):
+    """Given abundance data, solve for MLE of logseries parameter p."""
+    BOUNDS = [0, 1]
+    DIST_FROM_BOUND = 10 ** -15    
+    y = lambda x: 1 / log(1 / (1 - x)) * x / (1 - x) - sum(ab) / len(ab)
+    p = bisect(y, BOUNDS[0] + DIST_FROM_BOUND, BOUNDS[1] - DIST_FROM_BOUND,
+                xtol = 1.490116e-08)
+    return p
+
 def trunc_logser_solver(ab):
     """Given abundance data, solve for MLE of truncated logseries parameter p"""
     BOUNDS = [0, 1]
