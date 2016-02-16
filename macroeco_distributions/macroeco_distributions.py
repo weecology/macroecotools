@@ -503,10 +503,10 @@ def logser_solver(ab):
     """Given abundance data, solve for MLE of logseries parameter p."""
     BOUNDS = [0, 1]
     DIST_FROM_BOUND = 10 ** -15    
-    y = lambda x: 1 / log(1 / (1 - x)) * x / (1 - x) - sum(ab) / len(ab)
-    p = bisect(y, BOUNDS[0] + DIST_FROM_BOUND, BOUNDS[1] - DIST_FROM_BOUND,
+    y = lambda x: 1 / log(1 / (1 - expit(x))) * expit(x) / (1 - expit(x)) - sum(ab) / len(ab)
+    x = bisect(y, logit(BOUNDS[0] + DIST_FROM_BOUND), logit(BOUNDS[1] - DIST_FROM_BOUND),
                 xtol = 1.490116e-08)
-    return p
+    return expit(x)
 
 def trunc_logser_solver(ab):
     """Given abundance data, solve for MLE of truncated logseries parameter p"""
