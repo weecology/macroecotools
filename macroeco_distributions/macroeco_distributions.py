@@ -516,8 +516,8 @@ def trunc_logser_solver(ab):
     N = sum(ab)
     m = np.array(range (1, int(N) + 1)) 
     y = lambda x: sum(x ** m / N * S) - sum((x ** m) / m)
-    p = optimize.bisect(y, BOUNDS[0] + DIST_FROM_BOUND, 
-                        min((sys.float_info[0] / S) ** (1 / N), 2), xtol = 1.490116e-08)
+    x0 = logser_solver(ab)
+    p = optimize.fsolve(y, x0, xtol = 1.490116e-08)[0]
     return p
 
 def trunc_geom_solver(ab, upper_bound):
