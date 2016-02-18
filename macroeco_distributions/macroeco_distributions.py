@@ -140,7 +140,10 @@ class pln_gen(rv_discrete):
         return np.array(ab)
 
     def _argcheck(self, *args):
-        return 1
+        if args[2] is True: self.a = 1
+        else: self.a = 0
+        cond = args[1] > 0
+        return cond
     
 pln = pln_gen(name='pln', longname='Poisson lognormal', 
               shapes = 'mu, sigma, lower_trunc')
@@ -149,6 +152,8 @@ class trunc_logser_gen(rv_discrete):
     """Upper truncated logseries distribution
     
     Scipy based distribution class for the truncated logseries pmf, cdf and rvs
+    Note that because this function is upper-truncated, its parameter p could be larger than 1, 
+    unlike the untruncated logseries where 0<p<1.
     
     Usage:
     PMF: trunc_logser.pmf(list_of_xvals, p, upper_bound)
@@ -158,7 +163,6 @@ class trunc_logser_gen(rv_discrete):
     """
     def _pmf(self, x, p, upper_bound):
         x = np.array(x)
-        #return stats.logser.pmf(x, p) / stats.logser.cdf(upper_bound, p)
         if p[0] < 1:
             return stats.logser.pmf(x, p) / stats.logser.cdf(upper_bound, p)
         else:
@@ -190,6 +194,12 @@ class trunc_logser_gen(rv_discrete):
                 if y(1) > 0: out.append(1)
                 else: out.append(int(round(bisect(y, 1, upper_bound))))
         return np.array(out)
+    
+    def _argcheck(self, *args):
+        self.a = 1
+        self.b = args[1]
+        cond = (args[0] > 0) and (args[1] >= 1)
+        return cond
 
 trunc_logser = trunc_logser_gen(a=1, name='trunc_logser',
                                 longname='Upper truncated logseries',
@@ -322,8 +332,10 @@ class trunc_geom_gen(rv_discrete):
                 rand_num = np.append(rand_num, rand_new)
         return rand_num
     
-    def _argcheck(self, p, upper_bound):
-        cond = (p > 0) & (upper_bound >= 1) 
+    def _argcheck(self, *args):
+        self.a = 1
+        self.b = args[1]
+        cond = (args[0] > 0) & (args[1] >= 1) 
         return cond
 
 trunc_geom = trunc_geom_gen(name = 'trunc_geom', longname = 'Upper truncated geometric', 
@@ -347,8 +359,10 @@ class trunc_geom_with_zeros_gen(rv_discrete):
             np.log(1 - p) - 1
         return np.ceil(x)
     
-    def _argcheck(self, p, upper_bound):
-        cond = (p > 0) & (upper_bound >= 1) 
+    def _argcheck(self, *args):
+        self.a = 0
+        self.b = args[1]
+        cond = (args[0] > 0) & (args[1] >= 0) 
         return cond
 
 trunc_geom_with_zeros = trunc_geom_with_zeros_gen(name = 'trunc_geom_with_zeros', 
@@ -381,9 +395,9 @@ class nbinom_lower_trunc_gen(rv_discrete):
         cdf_list = stats.uniform.rvs(size = self._size)
         return self.ppf(cdf_list, n, p)
                         
-    def _argcheck(self, n, p):
+    def _argcheck(self, *args):
         self.a = 1
-        cond = (n > 0) & (0 < p) & (p < 1) 
+        cond = (args[0] > 0) & (args[1] > 0) & (args[1] < 1) 
         return cond
 
 nbinom_lower_trunc = nbinom_lower_trunc_gen(name = 'nbinom_lower_trunc', 
