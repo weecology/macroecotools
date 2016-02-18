@@ -419,8 +419,6 @@ def pln_ll(x, mu, sigma, lower_trunc = True):
     
     """
     x = np.array(x)
-    if lower_trunc is True:
-        x = check_for_nonpositive(x)
     uniq_counts = itemfreq(x)
     unique_vals, counts = zip(*uniq_counts)
     plik = pln.logpmf(unique_vals, mu, sigma, lower_trunc)
@@ -460,9 +458,9 @@ def trunc_geom_ll(ab, p, upper_bound):
     """Log-likelhood of an upper-truncated geometric distribution"""
     return geom_ll(ab, p) - len(ab) * stats.geom.logcdf(upper_bound, p)
 
-def negbin_ll(ab, n, p):
+def nbinom_lower_trunc_ll(ab, n, p):
     """Log-likelihood of a negative binomial dstribution (truncated at 1)"""
-    return sum(stats.nbinom.logpmf(ab, n, p)) - len(ab) * stats.nbinom.logsf(0, n, p)
+    return sum(nbinom_lower_trunc.logpmf(ab, n, p))
 
 def dis_gamma_ll(ab, k, theta):
     """Log-likelihood of a discrete gamma distribution
@@ -473,9 +471,9 @@ def dis_gamma_ll(ab, k, theta):
     
     """
     cutoff = 1e5
-    gamma_sum = sum(stats.gamma.pdf(range(1, cutoff + 1), k, scale = theta))
+    gamma_sum = sum(stats.gamma.pdf(range(1, int(cutoff) + 1), k, scale = theta))
     C = 1 / gamma_sum
-    return sum(log(stats.gamma.pdf(ab, k, scale = theta) * C))
+    return sum(stats.gamma.logpdf(ab, k, scale = theta) + log(C))
 
 def gen_yule_ll(ab, a, rho):
     """Log-likelihood of the Yule-Simon distribution.
@@ -509,7 +507,8 @@ def pln_solver(ab, lower_trunc = True):
     """
     ab = np.array(ab)
     if lower_trunc is True:
-        ab = check_for_nonpositive(ab)
+        ab = check_for_support(ab, lower = 1)
+    else: ab = check_for_support(ab, lower = 0)
     mu0 = mean(log(ab[ab > 0]))
     sig0 = std(log(ab[ab > 0]))
     def pln_func(x): 
@@ -519,6 +518,7 @@ def pln_solver(ab, lower_trunc = True):
 
 def logser_solver(ab):
     """Given abundance data, solve for MLE of logseries parameter p."""
+    ab = check_for_support(ab, lower = 1)
     BOUNDS = [0, 1]
     DIST_FROM_BOUND = 10 ** -15    
     y = lambda x: 1 / log(1 / (1 - expit(x))) * expit(x) / (1 - expit(x)) - sum(ab) / len(ab)
@@ -526,13 +526,20 @@ def logser_solver(ab):
                 xtol = 1.490116e-08)
     return expit(x)
 
-def trunc_logser_solver(ab):
-    """Given abundance data, solve for MLE of truncated logseries parameter p"""
+def trunc_logser_solver(ab, upper_bound = None):
+    """Given abundance data, solve for MLE of truncated logseries parameter p. 
+    
+    Note that because the distribution is truncated, p can be larger than 1.
+    If an upper bound is not given, it takes the default value sum(ab).
+    
+    """
+    if upper_bound is None: upper_bound = sum(ab)
+    ab = check_for_support(ab, lower = 1, upper = upper_bound)
     BOUNDS = [0, 1]
     DIST_FROM_BOUND = 10 ** -15
     S = len(ab)
     N = sum(ab)
-    m = np.array(range (1, int(N) + 1)) 
+    m = np.array(range (1, int(upper_bound) + 1)) 
     y = lambda x: sum(x ** m / N * S) - sum((x ** m) / m)
     x0 = logser_solver(ab)
     p = optimize.fsolve(y, x0, xtol = 1.490116e-08)[0]
@@ -540,6 +547,7 @@ def trunc_logser_solver(ab):
 
 def trunc_geom_solver(ab, upper_bound):
     """Given abundance data, solve for MLE of upper-truncated geometric distribution parameter p"""
+    ab = check_for_support(ab, lower = 1, upper = upper_bound)
     BOUNDS = [0, 1]
     DIST_FROM_BOUND = 10 ** -10
     S = len(ab)
@@ -555,6 +563,7 @@ def trunc_expon_solver(x, lower_bound):
     solve for MLE of lower truncated exponential distribution lmd.
     
     """
+    x = check_for_support(x, lower = lower_bound)
     return 1 / (np.mean(np.array(x)) - lower_bound)
 
 def trunc_pareto_solver(x, lower_bound):
@@ -563,14 +572,17 @@ def trunc_pareto_solver(x, lower_bound):
     solve for MLE of lower truncated Pareto distribution b. 
     
     """
-    x = np.array(x)
+    x = check_for_support(x, lower = lower_bound)
     return len(x) / sum(log(x) - log(lower_bound))
 
-def negbin_solver(ab):
-    """Given abundance data, solve for MLE of negative binomial parameters n and p"""
+def nbinom_lower_trunc_solver(ab):
+    """Given abundance data, solve for MLE of negative binomial (lower-truncated at 1) parameters n and p"""
+    ab = check_for_support(ab, lower = 1)
     mu = np.mean(ab)
     var = np.var(ab, ddof = 1)
     p0 = 1 - mu / var
+    if p0 < 0: p0 = 10**-5
+    elif p0 > 1: p0 = 1 - 10**-5
     logit_p0 = logit(p0)
     log_n0 = log(mu * (1 - p0) / p0)
     def negbin_func(x):
@@ -580,6 +592,7 @@ def negbin_solver(ab):
 
 def dis_gamma_solver(ab):
     """Given abundance data, solve for MLE of discrete gamma parameters k and theta"""
+    ab = check_for_support(ab, lower = 0)
     mu = np.mean(ab)
     var = np.var(ab, ddof = 1)
     theta0 = var / mu
@@ -596,6 +609,7 @@ def gen_yule_solver(ab):
     
     
     """
+    ab = check_for_support(ab, lower = 1)
     a0 = 1
     rho0 = np.mean(ab) / (np.mean(ab) - 1)
     tol = 1.490116e-08
@@ -628,6 +642,7 @@ def yule_solver(ab):
     Algorithm from Garcia 2011.
     
     """
+    ab = check_for_support(ab, lower = 1)
     rho0 = np.mean(ab) / (np.mean(ab) - 1)
     tol = 1.490116e-08
     loop_end = False
@@ -639,6 +654,7 @@ def yule_solver(ab):
 
 def zipf_solver(ab):
     """Obtain the MLE parameter for a Zipf distribution with x_min = 1."""
+    ab = check_for_support(ab, lower = 1)
     par0 = 1 + len(ab) / (sum(np.log(2 * np.array(ab))))
     def zipf_func(x):
         return -zipf_ll(ab, x)
@@ -659,16 +675,15 @@ def ysquareroot_pdf(y, dist, *pars):
     y = np.array(y)
     return 2 * dist.pdf(y ** 2, *pars) * y
 
-def check_for_nonpositive(x, warning = True):
-    """Check if x (list or array) contains negative values or zeros. 
+def check_for_support(x, lower = 0, upper = np.inf, warning = True):
+    """Check if x (list or array) contains values out of support [lower, upper]
     
-    If it does, print a warning and have the values removed.
-    This function is used for distributions that only takes positive values.
+    If it does, remove the values and optionally print out a warning.
+    This function is used for solvers of distributions with support smaller than (-inf, inf).
     
     """
-    x = np.array(x)
-    if min(x) <= 0: 
-        x = x[x > 0]
-        if warning: 
-            print "Warning: non-positive values in the input are removed."
+    if (min(x) < lower) or (max(x) > upper):
+        if warning:
+            print "Warning: Out-of-support values in the input are removed."
+    x = np.array([element for element in x if lower <= element <= upper])
     return x
