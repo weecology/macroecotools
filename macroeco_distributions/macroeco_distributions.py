@@ -37,6 +37,7 @@ from scipy.stats import rv_discrete, rv_continuous, itemfreq
 from scipy.optimize import bisect, fsolve
 from scipy.special import logit, expit
 from scipy.integrate import quad
+import warnings
 
 #._rvs method is not currently available for pln.
 class pln_gen(rv_discrete):
@@ -402,9 +403,9 @@ def pln_ll(x, mu, sigma, lower_trunc = True):
     (http://www.nceas.ucsb.edu/projects/11121)    
     
     """
-    #purify abundance vector
     x = np.array(x)
-    x = x[x > 0]
+    if lower_trunc is True:
+        x = check_for_nonpositive(x)
     uniq_counts = itemfreq(x)
     unique_vals, counts = zip(*uniq_counts)
     plik = pln.logpmf(unique_vals, mu, sigma, lower_trunc)
@@ -492,8 +493,10 @@ def pln_solver(ab, lower_trunc = True):
     
     """
     ab = np.array(ab)
-    mu0 = mean(log(ab))
-    sig0 = std(log(ab))
+    if lower_trunc is True:
+        ab = check_for_nonpositive(ab)
+    mu0 = mean(log(ab[ab > 0]))
+    sig0 = std(log(ab[ab > 0]))
     def pln_func(x): 
         return -pln_ll(ab, x[0], x[1], lower_trunc)
     mu, sigma = optimize.fmin_bfgs(pln_func, x0 = [mu0, sig0], disp = 0)
@@ -640,3 +643,17 @@ def ysquareroot_pdf(y, dist, *pars):
     """Calculates the pdf for y, given the distribution of variable X = Y^2 and a given value y."""
     y = np.array(y)
     return 2 * dist.pdf(y ** 2, *pars) * y
+
+def check_for_nonpositive(x, warning = True):
+    """Check if x (list or array) contains negative values or zeros. 
+    
+    If it does, print a warning and have the values removed.
+    This function is used for distributions that only takes positive values.
+    
+    """
+    x = np.array(x)
+    if min(x) <= 0: 
+        x = x[x > 0]
+        if warning: 
+            print "Warning: non-positive values in the input are removed."
+    return x
