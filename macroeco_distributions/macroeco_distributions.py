@@ -382,7 +382,8 @@ class nbinom_lower_trunc_gen(rv_discrete):
         return self.ppf(cdf_list, n, p)
                         
     def _argcheck(self, n, p):
-        cond = (n > 0) & (0 < p) & ( p < 1) 
+        self.a = 1
+        cond = (n > 0) & (0 < p) & (p < 1) 
         return cond
 
 nbinom_lower_trunc = nbinom_lower_trunc_gen(name = 'nbinom_lower_trunc', 
