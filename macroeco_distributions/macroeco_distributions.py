@@ -37,6 +37,7 @@ from scipy.stats import rv_discrete, rv_continuous, itemfreq
 from scipy.optimize import bisect, fsolve
 from scipy.special import logit, expit
 from scipy.integrate import quad
+import warnings
 
 #._rvs method is not currently available for pln.
 class pln_gen(rv_discrete):
@@ -139,7 +140,10 @@ class pln_gen(rv_discrete):
         return np.array(ab)
 
     def _argcheck(self, *args):
-        return 1
+        if args[2] is True: self.a = 1
+        else: self.a = 0
+        cond = args[1] > 0
+        return cond
     
 pln = pln_gen(name='pln', longname='Poisson lognormal', 
               shapes = 'mu, sigma, lower_trunc')
@@ -148,6 +152,8 @@ class trunc_logser_gen(rv_discrete):
     """Upper truncated logseries distribution
     
     Scipy based distribution class for the truncated logseries pmf, cdf and rvs
+    Note that because this function is upper-truncated, its parameter p could be larger than 1, 
+    unlike the untruncated logseries where 0<p<1.
     
     Usage:
     PMF: trunc_logser.pmf(list_of_xvals, p, upper_bound)
@@ -157,7 +163,6 @@ class trunc_logser_gen(rv_discrete):
     """
     def _pmf(self, x, p, upper_bound):
         x = np.array(x)
-        #return stats.logser.pmf(x, p) / stats.logser.cdf(upper_bound, p)
         if p[0] < 1:
             return stats.logser.pmf(x, p) / stats.logser.cdf(upper_bound, p)
         else:
@@ -189,6 +194,12 @@ class trunc_logser_gen(rv_discrete):
                 if y(1) > 0: out.append(1)
                 else: out.append(int(round(bisect(y, 1, upper_bound))))
         return np.array(out)
+    
+    def _argcheck(self, *args):
+        self.a = 1
+        self.b = args[1]
+        cond = (args[0] > 0) and (args[1] >= 1)
+        return cond
 
 trunc_logser = trunc_logser_gen(a=1, name='trunc_logser',
                                 longname='Upper truncated logseries',
@@ -321,8 +332,10 @@ class trunc_geom_gen(rv_discrete):
                 rand_num = np.append(rand_num, rand_new)
         return rand_num
     
-    def _argcheck(self, p, upper_bound):
-        cond = (p > 0) & (upper_bound >= 1) 
+    def _argcheck(self, *args):
+        self.a = 1
+        self.b = args[1]
+        cond = (args[0] > 0) & (args[1] >= 1) 
         return cond
 
 trunc_geom = trunc_geom_gen(name = 'trunc_geom', longname = 'Upper truncated geometric', 
@@ -346,8 +359,10 @@ class trunc_geom_with_zeros_gen(rv_discrete):
             np.log(1 - p) - 1
         return np.ceil(x)
     
-    def _argcheck(self, p, upper_bound):
-        cond = (p > 0) & (upper_bound >= 1) 
+    def _argcheck(self, *args):
+        self.a = 0
+        self.b = args[1]
+        cond = (args[0] > 0) & (args[1] >= 0) 
         return cond
 
 trunc_geom_with_zeros = trunc_geom_with_zeros_gen(name = 'trunc_geom_with_zeros', 
@@ -380,8 +395,9 @@ class nbinom_lower_trunc_gen(rv_discrete):
         cdf_list = stats.uniform.rvs(size = self._size)
         return self.ppf(cdf_list, n, p)
                         
-    def _argcheck(self, n, p):
-        cond = (n > 0) & (0 < p) & ( p < 1) 
+    def _argcheck(self, *args):
+        self.a = 1
+        cond = (args[0] > 0) & (args[1] > 0) & (args[1] < 1) 
         return cond
 
 nbinom_lower_trunc = nbinom_lower_trunc_gen(name = 'nbinom_lower_trunc', 
@@ -402,9 +418,7 @@ def pln_ll(x, mu, sigma, lower_trunc = True):
     (http://www.nceas.ucsb.edu/projects/11121)    
     
     """
-    #purify abundance vector
     x = np.array(x)
-    x = x[x > 0]
     uniq_counts = itemfreq(x)
     unique_vals, counts = zip(*uniq_counts)
     plik = pln.logpmf(unique_vals, mu, sigma, lower_trunc)
@@ -444,9 +458,9 @@ def trunc_geom_ll(ab, p, upper_bound):
     """Log-likelhood of an upper-truncated geometric distribution"""
     return geom_ll(ab, p) - len(ab) * stats.geom.logcdf(upper_bound, p)
 
-def negbin_ll(ab, n, p):
+def nbinom_lower_trunc_ll(ab, n, p):
     """Log-likelihood of a negative binomial dstribution (truncated at 1)"""
-    return sum(stats.nbinom.logpmf(ab, n, p)) - len(ab) * stats.nbinom.logsf(0, n, p)
+    return sum(nbinom_lower_trunc.logpmf(ab, n, p))
 
 def dis_gamma_ll(ab, k, theta):
     """Log-likelihood of a discrete gamma distribution
@@ -457,9 +471,9 @@ def dis_gamma_ll(ab, k, theta):
     
     """
     cutoff = 1e5
-    gamma_sum = sum(stats.gamma.pdf(range(1, cutoff + 1), k, scale = theta))
+    gamma_sum = sum(stats.gamma.pdf(range(1, int(cutoff) + 1), k, scale = theta))
     C = 1 / gamma_sum
-    return sum(log(stats.gamma.pdf(ab, k, scale = theta) * C))
+    return sum(stats.gamma.logpdf(ab, k, scale = theta) + log(C))
 
 def gen_yule_ll(ab, a, rho):
     """Log-likelihood of the Yule-Simon distribution.
@@ -492,27 +506,48 @@ def pln_solver(ab, lower_trunc = True):
     
     """
     ab = np.array(ab)
-    mu0 = mean(log(ab))
-    sig0 = std(log(ab))
+    if lower_trunc is True:
+        ab = check_for_support(ab, lower = 1)
+    else: ab = check_for_support(ab, lower = 0)
+    mu0 = mean(log(ab[ab > 0]))
+    sig0 = std(log(ab[ab > 0]))
     def pln_func(x): 
         return -pln_ll(ab, x[0], x[1], lower_trunc)
     mu, sigma = optimize.fmin_bfgs(pln_func, x0 = [mu0, sig0], disp = 0)
     return mu, sigma
 
-def trunc_logser_solver(ab):
-    """Given abundance data, solve for MLE of truncated logseries parameter p"""
+def logser_solver(ab):
+    """Given abundance data, solve for MLE of logseries parameter p."""
+    ab = check_for_support(ab, lower = 1)
+    BOUNDS = [0, 1]
+    DIST_FROM_BOUND = 10 ** -15    
+    y = lambda x: 1 / log(1 / (1 - expit(x))) * expit(x) / (1 - expit(x)) - sum(ab) / len(ab)
+    x = bisect(y, logit(BOUNDS[0] + DIST_FROM_BOUND), logit(BOUNDS[1] - DIST_FROM_BOUND),
+                xtol = 1.490116e-08)
+    return expit(x)
+
+def trunc_logser_solver(ab, upper_bound = None):
+    """Given abundance data, solve for MLE of truncated logseries parameter p. 
+    
+    Note that because the distribution is truncated, p can be larger than 1.
+    If an upper bound is not given, it takes the default value sum(ab).
+    
+    """
+    if upper_bound is None: upper_bound = sum(ab)
+    ab = check_for_support(ab, lower = 1, upper = upper_bound)
     BOUNDS = [0, 1]
     DIST_FROM_BOUND = 10 ** -15
     S = len(ab)
     N = sum(ab)
-    m = np.array(range (1, int(N) + 1)) 
+    m = np.array(range (1, int(upper_bound) + 1)) 
     y = lambda x: sum(x ** m / N * S) - sum((x ** m) / m)
-    p = optimize.bisect(y, BOUNDS[0] + DIST_FROM_BOUND, 
-                        min((sys.float_info[0] / S) ** (1 / N), 2), xtol = 1.490116e-08)
+    x0 = logser_solver(ab)
+    p = optimize.fsolve(y, x0, xtol = 1.490116e-08)[0]
     return p
 
 def trunc_geom_solver(ab, upper_bound):
     """Given abundance data, solve for MLE of upper-truncated geometric distribution parameter p"""
+    ab = check_for_support(ab, lower = 1, upper = upper_bound)
     BOUNDS = [0, 1]
     DIST_FROM_BOUND = 10 ** -10
     S = len(ab)
@@ -528,6 +563,7 @@ def trunc_expon_solver(x, lower_bound):
     solve for MLE of lower truncated exponential distribution lmd.
     
     """
+    x = check_for_support(x, lower = lower_bound)
     return 1 / (np.mean(np.array(x)) - lower_bound)
 
 def trunc_pareto_solver(x, lower_bound):
@@ -536,14 +572,17 @@ def trunc_pareto_solver(x, lower_bound):
     solve for MLE of lower truncated Pareto distribution b. 
     
     """
-    x = np.array(x)
+    x = check_for_support(x, lower = lower_bound)
     return len(x) / sum(log(x) - log(lower_bound))
 
-def negbin_solver(ab):
-    """Given abundance data, solve for MLE of negative binomial parameters n and p"""
+def nbinom_lower_trunc_solver(ab):
+    """Given abundance data, solve for MLE of negative binomial (lower-truncated at 1) parameters n and p"""
+    ab = check_for_support(ab, lower = 1)
     mu = np.mean(ab)
     var = np.var(ab, ddof = 1)
     p0 = 1 - mu / var
+    if p0 < 0: p0 = 10**-5
+    elif p0 > 1: p0 = 1 - 10**-5
     logit_p0 = logit(p0)
     log_n0 = log(mu * (1 - p0) / p0)
     def negbin_func(x):
@@ -553,6 +592,7 @@ def negbin_solver(ab):
 
 def dis_gamma_solver(ab):
     """Given abundance data, solve for MLE of discrete gamma parameters k and theta"""
+    ab = check_for_support(ab, lower = 0)
     mu = np.mean(ab)
     var = np.var(ab, ddof = 1)
     theta0 = var / mu
@@ -569,6 +609,7 @@ def gen_yule_solver(ab):
     
     
     """
+    ab = check_for_support(ab, lower = 1)
     a0 = 1
     rho0 = np.mean(ab) / (np.mean(ab) - 1)
     tol = 1.490116e-08
@@ -601,6 +642,7 @@ def yule_solver(ab):
     Algorithm from Garcia 2011.
     
     """
+    ab = check_for_support(ab, lower = 1)
     rho0 = np.mean(ab) / (np.mean(ab) - 1)
     tol = 1.490116e-08
     loop_end = False
@@ -612,6 +654,7 @@ def yule_solver(ab):
 
 def zipf_solver(ab):
     """Obtain the MLE parameter for a Zipf distribution with x_min = 1."""
+    ab = check_for_support(ab, lower = 1)
     par0 = 1 + len(ab) / (sum(np.log(2 * np.array(ab))))
     def zipf_func(x):
         return -zipf_ll(ab, x)
@@ -631,3 +674,16 @@ def ysquareroot_pdf(y, dist, *pars):
     """Calculates the pdf for y, given the distribution of variable X = Y^2 and a given value y."""
     y = np.array(y)
     return 2 * dist.pdf(y ** 2, *pars) * y
+
+def check_for_support(x, lower = 0, upper = np.inf, warning = True):
+    """Check if x (list or array) contains values out of support [lower, upper]
+    
+    If it does, remove the values and optionally print out a warning.
+    This function is used for solvers of distributions with support smaller than (-inf, inf).
+    
+    """
+    if (min(x) < lower) or (max(x) > upper):
+        if warning:
+            print "Warning: Out-of-support values in the input are removed."
+    x = np.array([element for element in x if lower <= element <= upper])
+    return x
