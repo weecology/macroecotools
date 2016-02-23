@@ -657,8 +657,8 @@ def zipf_solver(ab):
     ab = check_for_support(ab, lower = 1)
     par0 = 1 + len(ab) / (sum(np.log(2 * np.array(ab))))
     def zipf_func(x):
-        return -zipf_ll(ab, exp(x))
-    par = optimize.fmin(zipf_func, x0 = log(par0))[0]
+        return -zipf_ll(ab, x)
+    par = optimize.fmin(zipf_func, x0 = par0)[0]
     return par
     
 def xsquare_pdf(x, dist, *pars):
