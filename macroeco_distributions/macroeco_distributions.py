@@ -376,7 +376,7 @@ class nbinom_lower_trunc_gen(rv_discrete):
         return pmf
 
     def _logpmf(self, x, n, p):
-        logpmf = stats.nbinom.logpmf(ab, n, p) - stats.nbinom.logsf(0, n, p)
+        logpmf = stats.nbinom.logpmf(x, n, p) - stats.nbinom.logsf(0, n, p)
         return logpmf
 
     def _cdf(self, x, n, p):
