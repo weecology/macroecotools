@@ -547,8 +547,9 @@ def pln_solver(ab, lower_trunc = True):
     mu0 = mean(log(ab[ab > 0]))
     sig0 = std(log(ab[ab > 0]))
     def pln_func(x): 
-        return -pln_ll(ab, x[0], x[1], lower_trunc)
-    mu, sigma = optimize.fmin_bfgs(pln_func, x0 = [mu0, sig0], disp = 0)
+        return -pln_ll(ab, x[0], exp(x[1]), lower_trunc)
+    mu, logsigma = optimize.fmin_bfgs(pln_func, x0 = [mu0, log(sig0)], disp = 0)
+    sigma = exp(logsigma)
     return mu, sigma
 
 def logser_solver(ab):
