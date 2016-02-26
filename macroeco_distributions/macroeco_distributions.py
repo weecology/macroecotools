@@ -170,7 +170,17 @@ class trunc_logser_gen(rv_discrete):
             normalization = sum(p[0] ** ivals / ivals)
             pmf = (p[0] ** x / x) / normalization
             return pmf
-
+    
+    def _logpmf(self, x, p, upper_bound):
+        x = np.array(x)
+        if p[0] < 1:
+            return stats.logser.logpmf(x, p) - stats.logser.logcdf(upper_bound, p)
+        else:
+            ivals = np.arange(1, upper_bound[0] + 1)
+            normalization = sum(p[0] ** ivals / ivals)
+            logpmf = x * log(p[0]) - log(x) - log(normalization)
+            return logpmf
+        
     def _cdf(self, x, p, upper_bound):
         x = np.array(x)
         if p[0] < 1:
