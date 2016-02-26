@@ -67,10 +67,10 @@ class pln_gen(rv_discrete):
                     #abundances, approx fails for lower abundances - 
                     #assume it gets better for abundance > 50
                     V = sigma ** 2
-                    pmf_i = (1 / sqrt(2 * pi * V) / x_i *
-                           exp(-(log(x_i) - mu) ** 2 / (2 * V)) *
-                           (1 + 1 / (2 * x_i * V) * ((log(x_i) - mu) ** 2 / V +
-                                                    log(x_i) - mu- 1)))
+                    pmf_i = 1 / sqrt(2 * pi * V) / x_i * \
+                           exp(-(log(x_i) - mu) ** 2 / (2 * V)) * \
+                           (1 + 1 / (2 * x_i * V) * ((log(x_i) - mu) ** 2 / V + \
+                                                    log(x_i) - mu- 1))
                 else:
                     # Bulmer equation 2 -tested against Grundy Biometrika 38:427-434
                     # Table 1 & Table 2 and matched to the 4 decimals in the table except
@@ -224,6 +224,9 @@ class trunc_expon_gen(rv_continuous):
     def _pdf(self, x, lmd, lower_bound):
         return stats.expon.pdf(x, scale = 1/lmd, loc = lower_bound)
     
+    def _logpdf(self, x, lmd, lower_bound):
+        return stats.expon.logpdf(x, scale = 1/lmd, loc = lower_bound)
+    
     def _cdf(self, x, lmd, lower_bound):
         return stats.expon.cdf(x, scale = 1/lmd, loc = lower_bound)
     
@@ -255,6 +258,9 @@ class trunc_pareto_gen(rv_continuous):
     def _pdf(self, x, b, lower_bound):
         return stats.pareto.pdf(x, b, scale = lower_bound)
     
+    def _logpdf(self, x, b, lower_bound):
+        return stats.pareto.logpdf(x, b, scale = lower_bound)
+    
     def _cdf(self, x, b, lower_bound):
         return stats.pareto.cdf(x, b, scale = lower_bound)
     
@@ -280,6 +286,11 @@ class trunc_weibull_gen(rv_continuous):
         #Alternative way of formulating pdf (same results, speed might differ):
         #pdf = stats.frechet_r.pdf(x, k, scale = lmd) / (1 - stats.frechet_r.cdf(lower_bound, k, scale = lmd))
         return pdf
+    
+    def _logpdf(self, x, k, lmd, lower_bound):
+        x = np.array(x)
+        logpdf = log(k / lmd) + (k - 1) * log(x / lmd) - (x / lmd) ** k + (lower_bound / lmd) ** k 
+        return logpdf
     
     def _cdf(self, x, k, lmd, lower_bound):
         x = np.array(x)
@@ -312,6 +323,11 @@ class trunc_geom_gen(rv_discrete):
         x = np.array(x)
         pmf = (1 - p) ** (x - 1) * p / (1 - (1 - p) ** upper_bound)
         return pmf
+    
+    def _logpmf(self, x, p, upper_bound):
+        x = np.array(x)
+        logpmf = (x - 1) * log(1 - p) + log(p) - log(1 - (1 - p) ** upper_bound)
+        return logpmf
     
     def _cdf(self, x, p, upper_bound):
         x = np.array(x)
@@ -347,6 +363,11 @@ class trunc_geom_with_zeros_gen(rv_discrete):
         x = np.array(x)
         pmf = (1 - p) ** x * p / (1 - (1 - p) ** (upper_bound + 1))
         return pmf
+    
+    def _logpmf(self, x, p, upper_bound):
+        x = np.array(x)
+        logpmf = x * log(1 - p) + log(p) - log(1 - (1 - p) ** (upper_bound + 1))
+        return logpmf
     
     def _cdf(self, x, p, upper_bound):
         x = np.array(x)
