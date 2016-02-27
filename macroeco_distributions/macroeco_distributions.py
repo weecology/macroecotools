@@ -533,7 +533,8 @@ def pln_solver(ab, lower_trunc = True):
     sig0 = std(log(ab[ab > 0]))
     def pln_func(x): 
         return -pln_ll(ab, x[0], exp(x[1]), lower_trunc)
-    mu, logsigma = optimize.fmin_bfgs(pln_func, x0 = [mu0, log(sig0)], disp = 0)
+    mu, logsigma = optimize.fmin_l_bfgs_b(pln_func, x0 = [mu0, log(sig0)], approx_grad = True, \
+                                          bounds = [(None, None), (log(10**-16), None)])[0]
     sigma = exp(logsigma)
     return mu, sigma
 
