@@ -139,11 +139,10 @@ class pln_gen(rv_discrete):
                 if ab_single: ab.append(ab_single)
         return np.array(ab)
 
-    def _argcheck(self, *args):
-        if args[2] is True: self.a = 1
+    def _argcheck(self, mu, sigma, lower_trunc):
+        if lower_trunc is True: self.a = 1
         else: self.a = 0
-        cond = args[1] > 0
-        return cond
+        return (sigma > 0)
     
 pln = pln_gen(name='pln', longname='Poisson lognormal', 
               shapes = 'mu, sigma, lower_trunc')
@@ -205,11 +204,10 @@ class trunc_logser_gen(rv_discrete):
                 else: out.append(int(round(bisect(y, 1, upper_bound))))
         return np.array(out)
     
-    def _argcheck(self, *args):
+    def _argcheck(self, p, upper_bound):
         self.a = 1
-        self.b = args[1]
-        cond = (args[0] > 0) and (args[1] >= 1)
-        return cond
+        self.b = upper_bound
+        return (p > 0) & (upper_bound >= 1)
 
 trunc_logser = trunc_logser_gen(a=1, name='trunc_logser',
                                 longname='Upper truncated logseries',
@@ -243,14 +241,10 @@ class trunc_expon_gen(rv_continuous):
     def _rvs(self, lmd, lower_bound):
         return stats.expon.rvs(scale = 1/lmd, loc = lower_bound, size = self._size)
 
-    def _argcheck(self, *args):
-        self.a = args[1]
-        self.xa = args[1]
-        self.xb = 10 ** 10 # xb is arbitrarily set to a large number
-        cond = (args[0] > 0) & (args[1] >= 0)
-        return cond
+    def _argcheck(self, lmd, lower_bound):
+        self.a = lower_bound
+        return (lmd > 0) & (lower_bound >= 0)
     
-# Currently the upper bound of searching xb is set arbitrarily to 10**10 for all distributions.
 trunc_expon = trunc_expon_gen(name = 'trunc_expon', longname = 'Lower truncated exponential',
                               shapes = 'lmd, lower_bound')
 
@@ -278,12 +272,9 @@ class trunc_pareto_gen(rv_continuous):
         rand_num = stats.pareto.rvs(b, scale = lower_bound, size = self._size)
         return rand_num
     
-    def _argcheck(self, *args):
-        self.a = args[1]
-        self.xa = args[1]
-        self.xb = 10 ** 10
-        cond = (args[0] > 0) & (args[1] > 0)
-        return cond
+    def _argcheck(self, b, lower_bound):
+        self.a = lower_bound
+        return (b > 0) & (lower_bound > 0)
 
 trunc_pareto = trunc_pareto_gen(name = 'trunc_pareto', longname = 'Lower truncated Pareto', 
                                 shapes = 'b, lower_bound')
@@ -317,12 +308,9 @@ class trunc_weibull_gen(rv_continuous):
                 rand_num = np.append(rand_num, rand_new)
         return rand_num
     
-    def _argcheck(self, *args):
-        self.a = args[2]
-        self.xa = args[2]
-        self.xb = 10 ** 10
-        cond = (args[0] > 0) & (args[1] > 0) & (args[2] >= 0)
-        return cond
+    def _argcheck(self, k, lmd, lower_bound):
+        self.a = lower_bound
+        return (k > 0) & (lmd > 0) & (lower_bound >= 0)
 
 trunc_weibull = trunc_weibull_gen(name = 'trunc_weibull', longname = 'Lower truncated Weibull', 
                                   shapes = 'k, lmd, lower_bound')
@@ -358,11 +346,10 @@ class trunc_geom_gen(rv_discrete):
                 rand_num = np.append(rand_num, rand_new)
         return rand_num
     
-    def _argcheck(self, *args):
+    def _argcheck(self, p, upper_bound):
         self.a = 1
-        self.b = args[1]
-        cond = (args[0] > 0) & (args[1] >= 1) 
-        return cond
+        self.b = upper_bound
+        return (p > 0) & (p < 1) & (upper_bound >= 1) 
 
 trunc_geom = trunc_geom_gen(name = 'trunc_geom', longname = 'Upper truncated geometric', 
                                   shapes = 'p, upper_bound')
@@ -390,11 +377,10 @@ class trunc_geom_with_zeros_gen(rv_discrete):
             np.log(1 - p) - 1
         return np.ceil(x)
     
-    def _argcheck(self, *args):
+    def _argcheck(self, p, upper_bound):
         self.a = 0
-        self.b = args[1]
-        cond = (args[0] > 0) & (args[1] >= 0) 
-        return cond
+        self.b = upper_bound
+        return (p > 0) & (p < 1) & (upper_bound >= 0) 
 
 trunc_geom_with_zeros = trunc_geom_with_zeros_gen(name = 'trunc_geom_with_zeros', 
                                                   longname = 'Upper truncated geometric with zeros', 
@@ -430,10 +416,9 @@ class nbinom_lower_trunc_gen(rv_discrete):
         cdf_list = stats.uniform.rvs(size = self._size)
         return self.ppf(cdf_list, n, p)
                         
-    def _argcheck(self, *args):
+    def _argcheck(self, n, p):
         self.a = 1
-        cond = (args[0] > 0) & (args[1] > 0) & (args[1] < 1) 
-        return cond
+        return (n > 0) & (p > 0) & (p < 1) 
 
 nbinom_lower_trunc = nbinom_lower_trunc_gen(name = 'nbinom_lower_trunc', 
                                                   longname = 'Negative binomial truncated at 1', 
