@@ -623,7 +623,8 @@ def nbinom_lower_trunc_solver(ab):
     log_n0 = log(mu * (1 - p0) / p0)
     def negbin_func(x):
         return -nbinom_lower_trunc_ll(ab, exp(x[0]), expit(x[1]))
-    log_n, logit_p = optimize.fmin(negbin_func, x0 = [log_n0, logit_p0])
+    log_n, logit_p = optimize.fmin_l_bfgs_b(negbin_func, x0 = [log_n0, logit_p0], approx_grad=True, \
+                                        bounds = [(log(10**-16), None), (None, None)])[0]
     return exp(log_n), expit(logit_p)
 
 def dis_gamma_solver(ab):
