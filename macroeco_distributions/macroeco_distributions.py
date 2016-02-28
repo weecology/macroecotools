@@ -603,8 +603,8 @@ def nbinom_lower_trunc_solver(ab):
     mu = np.mean(ab)
     var = np.var(ab, ddof = 1)
     p0 = 1 - mu / var
-    if p0 < 0: p0 = 10**-5
-    elif p0 > 1: p0 = 1 - 10**-5
+    if p0 <= 0: p0 = 10**-5
+    elif p0 >= 1: p0 = 1 - 10**-5
     logit_p0 = logit(p0)
     log_n0 = log(mu * (1 - p0) / p0)
     def negbin_func(x):
