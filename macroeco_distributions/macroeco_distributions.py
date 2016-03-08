@@ -602,16 +602,21 @@ def nbinom_lower_trunc_solver(ab):
     ab = check_for_support(ab, lower = 1)
     mu = np.mean(ab)
     var = np.var(ab, ddof = 1)
-    p0 = 1 - mu / var
-    if p0 <= 0: p0 = 10**-5
-    elif p0 >= 1: p0 = 1 - 10**-5
-    logit_p0 = logit(p0)
-    log_n0 = log(mu * (1 - p0) / p0)
+    p_start = [10**-5, 1 - 10**-5]
+    if mu/var < 1: p_start.append(1 - mu / var)
+    ll, pars = [], []
     def negbin_func(x):
-        return -nbinom_lower_trunc_ll(ab, exp(x[0]), expit(x[1]))
-    log_n, logit_p = optimize.fmin_l_bfgs_b(negbin_func, x0 = [log_n0, logit_p0], approx_grad=True, \
-                                        bounds = [(log(10**-16), None), (None, None)])[0]
-    return exp(log_n), expit(logit_p)
+            return -nbinom_lower_trunc_ll(ab, exp(x[0]), expit(x[1]))    
+    for p0 in p_start:
+        logit_p0 = logit(p0)
+        log_n0 = log(mu * (1 - p0) / p0)
+        log_n, logit_p = optimize.fmin_l_bfgs_b(negbin_func, x0 = [log_n0, logit_p0], approx_grad=True, \
+                                                bounds = [(log(10**-16), None), (None, None)])[0] 
+        pars.append((exp(log_n), expit(logit_p)))
+        ll.append(-negbin_func([log_n, logit_p]))
+    ll_max, idx = max((ll_val, idx) for (idx, ll_val) in enumerate(ll))
+    n, p = pars[idx]
+    return n, p
 
 def dis_gamma_solver(ab):
     """Given abundance data, solve for MLE of discrete gamma parameters k and theta"""
