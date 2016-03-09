@@ -44,6 +44,12 @@ trunc_expon_pdf_table = [[2, 0.1, 1, '0.0905'],
 trunc_expon_cdf_table = [[2, 0.1, 1, '0.0952'],
                           [3, 0.5, 0.2, '0.7534'],
                           [4, 0.7, 0.4, '0.9195']]
+trunc_pareto_pdf_table = [[2, 1, 1, '0.25'],
+                          [3, 2, 0.2, '0.0030'],
+                          [4, 3, 0.7, '0.0040']]
+trunc_pareto_cdf_table = [[2, 1, 1, '0.50'],
+                          [3, 2, 0.2, '0.9956'],
+                          [4, 3, 0.7, '0.9946']]
 
 def test_pln_pmf1():
     """Tests pmf of pln against values from Table 2 in Grundy Biometrika 38:427-434.
@@ -80,6 +86,14 @@ def test_trunc_expon_pdf():
 def test_trunc_expon_cdf():
     for line in trunc_expon_cdf_table:
         yield check_dist_twoparameter, trunc_expon.cdf, line[0], line[1], line[2], float(line[3])
+
+def test_trunc_pareto_pdf():
+    for line in trunc_pareto_pdf_table:
+        yield check_dist_twoparameter, trunc_pareto.pdf, line[0], line[1], line[2], float(line[3])
+        
+def test_trunc_pareto_cdf():
+    for line in trunc_pareto_cdf_table:
+        yield check_dist_twoparameter, trunc_pareto.cdf, line[0], line[1], line[2], float(line[3])
         
 def check_pln_pmf(x, mu, sigma, lower_trunc, p_known):
     p_val = pln.pmf(x, mu, sigma, lower_trunc)
