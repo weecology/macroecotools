@@ -91,51 +91,51 @@ def test_pln_pmf2():
 
 def test_trunc_logser_pmf():
     for line in trunc_logser_pmf_table:
-        yield check_dist_twoparameter, trunc_logser.pmf, line[0], line[1], line[2], float(line[3])
+        yield check_dist, trunc_logser.pmf, line[0],  float(line[3]), line[1], line[2]
         
 def test_trunc_logser_cdf():
     for line in trunc_logser_cdf_table:
-        yield check_dist_twoparameter, trunc_logser.cdf, line[0], line[1], line[2], float(line[3])
+        yield check_dist, trunc_logser.cdf, line[0], float(line[3]), line[1], line[2]
 
 def test_trunc_expon_pdf():
     for line in trunc_expon_pdf_table:
-        yield check_dist_twoparameter, trunc_expon.pdf, line[0], line[1], line[2], float(line[3])
+        yield check_dist, trunc_expon.pdf, line[0], float(line[3]), line[1], line[2]
         
 def test_trunc_expon_cdf():
     for line in trunc_expon_cdf_table:
-        yield check_dist_twoparameter, trunc_expon.cdf, line[0], line[1], line[2], float(line[3])
+        yield check_dist, trunc_expon.cdf, line[0], float(line[3]), line[1], line[2]
 
 def test_trunc_pareto_pdf():
     for line in trunc_pareto_pdf_table:
-        yield check_dist_twoparameter, trunc_pareto.pdf, line[0], line[1], line[2], float(line[3])
+        yield check_dist, trunc_pareto.pdf, line[0], float(line[3]), line[1], line[2]
         
 def test_trunc_pareto_cdf():
     for line in trunc_pareto_cdf_table:
-        yield check_dist_twoparameter, trunc_pareto.cdf, line[0], line[1], line[2], float(line[3])
+        yield check_dist, trunc_pareto.cdf, line[0], float(line[3]), line[1], line[2]
 
 def test_trunc_geom_with_zeros_pmf():
     for line in trunc_geom_with_zeros_pmf_table:
-        yield check_dist_twoparameter, trunc_geom_with_zeros.pmf, line[0], line[1], line[2], float(line[3])
+        yield check_dist, trunc_geom_with_zeros.pmf, line[0], float(line[3]), line[1], line[2]
         
 def test_trunc_geom_with_zeros_cdf():
     for line in trunc_geom_with_zeros_cdf_table:
-        yield check_dist_twoparameter, trunc_geom_with_zeros.cdf, line[0], line[1], line[2], float(line[3])
+        yield check_dist, trunc_geom_with_zeros.cdf, line[0], float(line[3]), line[1], line[2]
 
 def test_trunc_geom_pmf():
     for line in trunc_geom_pmf_table:
-        yield check_dist_twoparameter, trunc_geom.pmf, line[0], line[1], line[2], float(line[3])
+        yield check_dist, trunc_geom.pmf, line[0], float(line[3]), line[1], line[2]
         
 def test_trunc_geom_cdf():
     for line in trunc_geom_cdf_table:
-        yield check_dist_twoparameter, trunc_geom.cdf, line[0], line[1], line[2], float(line[3])
+        yield check_dist, trunc_geom.cdf, line[0], float(line[3]), line[1], line[2]
 
 def test_nbinom_lower_trunc_pmf():
     for line in nbinom_lower_trunc_pmf_table:
-        yield check_dist_twoparameter, nbinom_lower_trunc.pmf, line[0], line[1], line[2], float(line[3])
+        yield check_dist, nbinom_lower_trunc.pmf, line[0], float(line[3]), line[1], line[2]
         
 def test_nbinom_lower_trunc_cdf():
     for line in nbinom_lower_trunc_cdf_table:
-        yield check_dist_twoparameter, nbinom_lower_trunc.cdf, line[0], line[1], line[2], float(line[3])
+        yield check_dist, nbinom_lower_trunc.cdf, line[0], float(line[3]), line[1], line[2]
         
 def check_pln_pmf(x, mu, sigma, lower_trunc, p_known):
     p_val = pln.pmf(x, mu, sigma, lower_trunc)
@@ -143,13 +143,13 @@ def check_pln_pmf(x, mu, sigma, lower_trunc, p_known):
     p_rounded = round(p_val, 4)
     assert_almost_equals(p_rounded, float(p_known), places=4)
 
-def check_dist_twoparameter(dist, x, par1, par2, p_known):
+def check_dist(dist, x, p_known, *pars):
     """Check the pmf/pdf or cdf of a distribution in macroeco_distribution defined by two parameters.
     
     dist should take the form dist_name.pmf, dist_name.pdf, or dist_name.cdf (e.g., trunc_logser.pmf)
     
     """
-    p_val = dist(x, par1, par2)
+    p_val = dist(x, *pars)
     p_rounded = round(p_val, 4)
     assert_almost_equals(p_rounded, float(p_known), places = 4)
     
