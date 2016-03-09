@@ -38,6 +38,12 @@ trunc_logser_pmf_table = [[1, 0.1, 10, '0.9491'],
 trunc_logser_cdf_table = [[1, 0.1, 10, '0.9491'],
                           [2, 0.3, 5, '0.9677'],
                           [3, 0.9, 20, '0.6839']]
+trunc_expon_pdf_table = [[2, 0.1, 1, '0.0905'],
+                          [3, 0.5, 0.2, '0.1233'],
+                          [4, 0.7, 0.4, '0.05632']]
+trunc_expon_cdf_table = [[2, 0.1, 1, '0.0952'],
+                          [3, 0.5, 0.2, '0.7534'],
+                          [4, 0.7, 0.4, '0.9195']]
 
 def test_pln_pmf1():
     """Tests pmf of pln against values from Table 2 in Grundy Biometrika 38:427-434.
@@ -62,6 +68,18 @@ def test_pln_pmf2():
 def test_trunc_logser_pmf():
     for line in trunc_logser_pmf_table:
         yield check_dist_twoparameter, trunc_logser.pmf, line[0], line[1], line[2], float(line[3])
+        
+def test_trunc_logser_cdf():
+    for line in trunc_logser_cdf_table:
+        yield check_dist_twoparameter, trunc_logser.cdf, line[0], line[1], line[2], float(line[3])
+
+def test_trunc_expon_pdf():
+    for line in trunc_expon_pdf_table:
+        yield check_dist_twoparameter, trunc_expon.pdf, line[0], line[1], line[2], float(line[3])
+        
+def test_trunc_expon_cdf():
+    for line in trunc_expon_cdf_table:
+        yield check_dist_twoparameter, trunc_expon.cdf, line[0], line[1], line[2], float(line[3])
         
 def check_pln_pmf(x, mu, sigma, lower_trunc, p_known):
     p_val = pln.pmf(x, mu, sigma, lower_trunc)
