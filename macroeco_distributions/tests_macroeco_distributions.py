@@ -56,6 +56,12 @@ trunc_geom_with_zeros_pmf_table = [[1, 0.1, 10, '0.1312'],
 trunc_geom_with_zeros_cdf_table = [[1, 0.1, 10, '0.2769'],
                           [2, 0.3, 5, '0.7446'],
                           [3, 0.7, 20, '0.9919']]
+trunc_geom_pmf_table = [[1, 0.1, 10, '0.1535'],
+                          [2, 0.3, 5, '0.2524'],
+                          [3, 0.7, 20, '0.063']]
+trunc_geom_cdf_table = [[1, 0.1, 10, '0.1535'],
+                          [2, 0.3, 5, '0.6130'],
+                          [3, 0.7, 20, '0.973']]
 
 def test_pln_pmf1():
     """Tests pmf of pln against values from Table 2 in Grundy Biometrika 38:427-434.
@@ -108,6 +114,14 @@ def test_trunc_geom_with_zeros_pmf():
 def test_trunc_geom_with_zeros_cdf():
     for line in trunc_geom_with_zeros_cdf_table:
         yield check_dist_twoparameter, trunc_geom_with_zeros.cdf, line[0], line[1], line[2], float(line[3])
+
+def test_trunc_geom_pmf():
+    for line in trunc_geom_pmf_table:
+        yield check_dist_twoparameter, trunc_geom.pmf, line[0], line[1], line[2], float(line[3])
+        
+def test_trunc_geom_cdf():
+    for line in trunc_geom_cdf_table:
+        yield check_dist_twoparameter, trunc_geom.cdf, line[0], line[1], line[2], float(line[3])
         
 def check_pln_pmf(x, mu, sigma, lower_trunc, p_known):
     p_val = pln.pmf(x, mu, sigma, lower_trunc)
