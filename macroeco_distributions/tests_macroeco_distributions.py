@@ -30,6 +30,15 @@ pln_table2 = [[-2.0, 2, '0.0234'],
               [3, 8, '0.0065'],
               [3, 16, '0.0193']]
 
+# The following test values are obtained from R 3.1.0.
+# Truncated distributions are derived using the upper or lower bound.
+trunc_logser_pmf_table = [[1, 0.1, 10, '0.9491'],
+                          [2, 0.3, 5, '0.1262'],
+                          [3, 0.9, 20, '0.1074']]
+trunc_logser_cdf_table = [[1, 0.1, 10, '0.9491'],
+                          [2, 0.3, 5, '0.9677'],
+                          [3, 0.9, 20, '0.6839']]
+
 def test_pln_pmf1():
     """Tests pmf of pln against values from Table 2 in Grundy Biometrika 38:427-434.
     
@@ -50,11 +59,25 @@ def test_pln_pmf2():
     for line in data:
         yield check_pln_pmf, 0, line[0], line[1], 0, line[2]
 
+def test_trunc_logser_pmf():
+    for line in trunc_logser_pmf_table:
+        yield check_dist_twoparameter, trunc_logser.pmf, line[0], line[1], line[2], float(line[3])
+        
 def check_pln_pmf(x, mu, sigma, lower_trunc, p_known):
     p_val = pln.pmf(x, mu, sigma, lower_trunc)
     
     p_rounded = round(p_val, 4)
     assert_almost_equals(p_rounded, float(p_known), places=4)
 
+def check_dist_twoparameter(dist, x, par1, par2, p_known):
+    """Check the pmf/pdf or cdf of a distribution in macroeco_distribution defined by two parameters.
+    
+    dist should take the form dist_name.pmf, dist_name.pdf, or dist_name.cdf (e.g., trunc_logser.pmf)
+    
+    """
+    p_val = dist(x, par1, par2)
+    p_rounded = round(p_val, 4)
+    assert_almost_equals(p_rounded, float(p_known), places = 4)
+    
 if __name__ == "__main__":
     nose.run()
