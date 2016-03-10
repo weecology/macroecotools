@@ -599,6 +599,8 @@ def trunc_pareto_solver(x, lower_bound):
 
 def nbinom_lower_trunc_solver(ab):
     """Given abundance data, solve for MLE of negative binomial (lower-truncated at 1) parameters n and p"""
+    # NOTE: This solver can trapped in non-optimal parameter space because of rounding error.
+    # It appears to be less stable than the solver in R. 
     ab = check_for_support(ab, lower = 1)
     mu = np.mean(ab)
     var = np.var(ab, ddof = 1)
