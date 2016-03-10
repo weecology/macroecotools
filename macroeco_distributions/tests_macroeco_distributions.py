@@ -68,6 +68,12 @@ nbinom_lower_trunc_pmf_table = [[20, 10, 0.2, '0.0118'],
 nbinom_lower_trunc_cdf_table = [[20, 10, 0.2, '0.0611'],
                           [2, 8, 0.3, '0.0015'],
                           [5, 20, 0.8, '0.6122']]
+trunc_weibull_pdf_table = [[3, 1, 1, 2, '0.3679'],
+                          [1.7, 5, 2, 1, '0.8640'],
+                          [2, 3, 4, 0.7, '0.1664']]
+trunc_weibull_cdf_table = [[3, 1, 1, 2, '0.6321'],
+                          [1.7, 5, 2, 1, '0.3380'],
+                          [2, 3, 4, 0.7, '0.1128']]
 
 def test_pln_pmf1():
     """Tests pmf of pln against values from Table 2 in Grundy Biometrika 38:427-434.
@@ -136,6 +142,14 @@ def test_nbinom_lower_trunc_pmf():
 def test_nbinom_lower_trunc_cdf():
     for line in nbinom_lower_trunc_cdf_table:
         yield check_dist, nbinom_lower_trunc.cdf, line[0], float(line[3]), line[1], line[2]
+
+def test_trunc_weibull_pdf():
+    for line in trunc_weibull_pdf_table:
+        yield check_dist, trunc_weibull.pdf, line[0], float(line[4]), line[1], line[2], line[3]
+        
+def test_trunc_weibull_cdf():
+    for line in trunc_weibull_cdf_table:
+        yield check_dist, trunc_weibull.cdf, line[0], float(line[4]), line[1], line[2], line[3]
         
 def check_dist(dist, x, p_known, *pars):
     """Check the pmf/pdf or cdf of a distribution in macroeco_distribution.
