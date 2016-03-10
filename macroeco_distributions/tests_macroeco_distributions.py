@@ -77,7 +77,7 @@ def test_pln_pmf1():
     """
     data = set([(log(10 ** line[0]), line[1] ** 0.5, line[2]) for line in pln_table2])
     for line in data:
-        yield check_pln_pmf, 1, line[0], line[1], 0, line[2]
+        yield check_dist, pln.pmf, 1, line[2], line[0], line[1], 0
 
 def test_pln_pmf2():
     """Tests cdf of pln against values from Table 1 in Grundy Biometrika 38:427-434.
@@ -87,7 +87,7 @@ def test_pln_pmf2():
     """
     data = set([(log(10 ** line[0]), line[1] ** 0.5, line[2]) for line in pln_table1])
     for line in data:
-        yield check_pln_pmf, 0, line[0], line[1], 0, line[2]
+        yield check_dist, pln.pmf, 0, line[2], line[0], line[1], 0
 
 def test_trunc_logser_pmf():
     for line in trunc_logser_pmf_table:
@@ -137,14 +137,8 @@ def test_nbinom_lower_trunc_cdf():
     for line in nbinom_lower_trunc_cdf_table:
         yield check_dist, nbinom_lower_trunc.cdf, line[0], float(line[3]), line[1], line[2]
         
-def check_pln_pmf(x, mu, sigma, lower_trunc, p_known):
-    p_val = pln.pmf(x, mu, sigma, lower_trunc)
-    
-    p_rounded = round(p_val, 4)
-    assert_almost_equals(p_rounded, float(p_known), places=4)
-
 def check_dist(dist, x, p_known, *pars):
-    """Check the pmf/pdf or cdf of a distribution in macroeco_distribution defined by two parameters.
+    """Check the pmf/pdf or cdf of a distribution in macroeco_distribution.
     
     dist should take the form dist_name.pmf, dist_name.pdf, or dist_name.cdf (e.g., trunc_logser.pmf)
     
