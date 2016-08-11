@@ -67,10 +67,10 @@ class pln_gen(rv_discrete):
                     #abundances, approx fails for lower abundances - 
                     #assume it gets better for abundance > 50
                     V = sigma ** 2
-                    pmf_i = (1 / sqrt(2 * pi * V) / x_i *
-                           exp(-(log(x_i) - mu) ** 2 / (2 * V)) *
-                           (1 + 1 / (2 * x_i * V) * ((log(x_i) - mu) ** 2 / V +
-                                                    log(x_i) - mu- 1)))
+                    pmf_i = 1 / sqrt(2 * pi * V) / x_i * \
+                           exp(-(log(x_i) - mu) ** 2 / (2 * V)) * \
+                           (1 + 1 / (2 * x_i * V) * ((log(x_i) - mu) ** 2 / V + \
+                                                    log(x_i) - mu- 1))
                 else:
                     # Bulmer equation 2 -tested against Grundy Biometrika 38:427-434
                     # Table 1 & Table 2 and matched to the 4 decimals in the table except
@@ -139,11 +139,10 @@ class pln_gen(rv_discrete):
                 if ab_single: ab.append(ab_single)
         return np.array(ab)
 
-    def _argcheck(self, *args):
-        if args[2] is True: self.a = 1
+    def _argcheck(self, mu, sigma, lower_trunc):
+        if lower_trunc is True: self.a = 1
         else: self.a = 0
-        cond = args[1] > 0
-        return cond
+        return (sigma > 0)
     
 pln = pln_gen(name='pln', longname='Poisson lognormal', 
               shapes = 'mu, sigma, lower_trunc')
@@ -170,7 +169,17 @@ class trunc_logser_gen(rv_discrete):
             normalization = sum(p[0] ** ivals / ivals)
             pmf = (p[0] ** x / x) / normalization
             return pmf
-
+    
+    def _logpmf(self, x, p, upper_bound):
+        x = np.array(x)
+        if p[0] < 1:
+            return stats.logser.logpmf(x, p) - stats.logser.logcdf(upper_bound, p)
+        else:
+            ivals = np.arange(1, upper_bound[0] + 1)
+            normalization = sum(p[0] ** ivals / ivals)
+            logpmf = x * log(p[0]) - log(x) - log(normalization)
+            return logpmf
+        
     def _cdf(self, x, p, upper_bound):
         x = np.array(x)
         if p[0] < 1:
@@ -195,11 +204,10 @@ class trunc_logser_gen(rv_discrete):
                 else: out.append(int(round(bisect(y, 1, upper_bound))))
         return np.array(out)
     
-    def _argcheck(self, *args):
+    def _argcheck(self, p, upper_bound):
         self.a = 1
-        self.b = args[1]
-        cond = (args[0] > 0) and (args[1] >= 1)
-        return cond
+        self.b = upper_bound
+        return (p > 0) & (upper_bound >= 1)
 
 trunc_logser = trunc_logser_gen(a=1, name='trunc_logser',
                                 longname='Upper truncated logseries',
@@ -224,20 +232,19 @@ class trunc_expon_gen(rv_continuous):
     def _pdf(self, x, lmd, lower_bound):
         return stats.expon.pdf(x, scale = 1/lmd, loc = lower_bound)
     
+    def _logpdf(self, x, lmd, lower_bound):
+        return stats.expon.logpdf(x, scale = 1/lmd, loc = lower_bound)
+    
     def _cdf(self, x, lmd, lower_bound):
         return stats.expon.cdf(x, scale = 1/lmd, loc = lower_bound)
     
     def _rvs(self, lmd, lower_bound):
         return stats.expon.rvs(scale = 1/lmd, loc = lower_bound, size = self._size)
 
-    def _argcheck(self, *args):
-        self.a = args[1]
-        self.xa = args[1]
-        self.xb = 10 ** 10 # xb is arbitrarily set to a large number
-        cond = (args[0] > 0) & (args[1] >= 0)
-        return cond
+    def _argcheck(self, lmd, lower_bound):
+        self.a = lower_bound
+        return (lmd > 0) & (lower_bound >= 0)
     
-# Currently the upper bound of searching xb is set arbitrarily to 10**10 for all distributions.
 trunc_expon = trunc_expon_gen(name = 'trunc_expon', longname = 'Lower truncated exponential',
                               shapes = 'lmd, lower_bound')
 
@@ -255,6 +262,9 @@ class trunc_pareto_gen(rv_continuous):
     def _pdf(self, x, b, lower_bound):
         return stats.pareto.pdf(x, b, scale = lower_bound)
     
+    def _logpdf(self, x, b, lower_bound):
+        return stats.pareto.logpdf(x, b, scale = lower_bound)
+    
     def _cdf(self, x, b, lower_bound):
         return stats.pareto.cdf(x, b, scale = lower_bound)
     
@@ -262,12 +272,9 @@ class trunc_pareto_gen(rv_continuous):
         rand_num = stats.pareto.rvs(b, scale = lower_bound, size = self._size)
         return rand_num
     
-    def _argcheck(self, *args):
-        self.a = args[1]
-        self.xa = args[1]
-        self.xb = 10 ** 10
-        cond = (args[0] > 0) & (args[1] > 0)
-        return cond
+    def _argcheck(self, b, lower_bound):
+        self.a = lower_bound
+        return (b > 0) & (lower_bound > 0)
 
 trunc_pareto = trunc_pareto_gen(name = 'trunc_pareto', longname = 'Lower truncated Pareto', 
                                 shapes = 'b, lower_bound')
@@ -280,6 +287,11 @@ class trunc_weibull_gen(rv_continuous):
         #Alternative way of formulating pdf (same results, speed might differ):
         #pdf = stats.frechet_r.pdf(x, k, scale = lmd) / (1 - stats.frechet_r.cdf(lower_bound, k, scale = lmd))
         return pdf
+    
+    def _logpdf(self, x, k, lmd, lower_bound):
+        x = np.array(x)
+        logpdf = log(k / lmd) + (k - 1) * log(x / lmd) - (x / lmd) ** k + (lower_bound / lmd) ** k 
+        return logpdf
     
     def _cdf(self, x, k, lmd, lower_bound):
         x = np.array(x)
@@ -296,12 +308,9 @@ class trunc_weibull_gen(rv_continuous):
                 rand_num = np.append(rand_num, rand_new)
         return rand_num
     
-    def _argcheck(self, *args):
-        self.a = args[2]
-        self.xa = args[2]
-        self.xb = 10 ** 10
-        cond = (args[0] > 0) & (args[1] > 0) & (args[2] >= 0)
-        return cond
+    def _argcheck(self, k, lmd, lower_bound):
+        self.a = lower_bound
+        return (k > 0) & (lmd > 0) & (lower_bound >= 0)
 
 trunc_weibull = trunc_weibull_gen(name = 'trunc_weibull', longname = 'Lower truncated Weibull', 
                                   shapes = 'k, lmd, lower_bound')
@@ -312,6 +321,11 @@ class trunc_geom_gen(rv_discrete):
         x = np.array(x)
         pmf = (1 - p) ** (x - 1) * p / (1 - (1 - p) ** upper_bound)
         return pmf
+    
+    def _logpmf(self, x, p, upper_bound):
+        x = np.array(x)
+        logpmf = (x - 1) * log(1 - p) + log(p) - log(1 - (1 - p) ** upper_bound)
+        return logpmf
     
     def _cdf(self, x, p, upper_bound):
         x = np.array(x)
@@ -332,11 +346,10 @@ class trunc_geom_gen(rv_discrete):
                 rand_num = np.append(rand_num, rand_new)
         return rand_num
     
-    def _argcheck(self, *args):
+    def _argcheck(self, p, upper_bound):
         self.a = 1
-        self.b = args[1]
-        cond = (args[0] > 0) & (args[1] >= 1) 
-        return cond
+        self.b = upper_bound
+        return (p > 0) & (p < 1) & (upper_bound >= 1) 
 
 trunc_geom = trunc_geom_gen(name = 'trunc_geom', longname = 'Upper truncated geometric', 
                                   shapes = 'p, upper_bound')
@@ -347,6 +360,11 @@ class trunc_geom_with_zeros_gen(rv_discrete):
         x = np.array(x)
         pmf = (1 - p) ** x * p / (1 - (1 - p) ** (upper_bound + 1))
         return pmf
+    
+    def _logpmf(self, x, p, upper_bound):
+        x = np.array(x)
+        logpmf = x * log(1 - p) + log(p) - log(1 - (1 - p) ** (upper_bound + 1))
+        return logpmf
     
     def _cdf(self, x, p, upper_bound):
         x = np.array(x)
@@ -359,11 +377,10 @@ class trunc_geom_with_zeros_gen(rv_discrete):
             np.log(1 - p) - 1
         return np.ceil(x)
     
-    def _argcheck(self, *args):
+    def _argcheck(self, p, upper_bound):
         self.a = 0
-        self.b = args[1]
-        cond = (args[0] > 0) & (args[1] >= 0) 
-        return cond
+        self.b = upper_bound
+        return (p > 0) & (p < 1) & (upper_bound >= 0) 
 
 trunc_geom_with_zeros = trunc_geom_with_zeros_gen(name = 'trunc_geom_with_zeros', 
                                                   longname = 'Upper truncated geometric with zeros', 
@@ -399,10 +416,9 @@ class nbinom_lower_trunc_gen(rv_discrete):
         cdf_list = stats.uniform.rvs(size = self._size)
         return self.ppf(cdf_list, n, p)
                         
-    def _argcheck(self, *args):
+    def _argcheck(self, n, p):
         self.a = 1
-        cond = (args[0] > 0) & (args[1] > 0) & (args[1] < 1) 
-        return cond
+        return (n > 0) & (p > 0) & (p < 1) 
 
 nbinom_lower_trunc = nbinom_lower_trunc_gen(name = 'nbinom_lower_trunc', 
                                                   longname = 'Negative binomial truncated at 1', 
@@ -516,8 +532,10 @@ def pln_solver(ab, lower_trunc = True):
     mu0 = mean(log(ab[ab > 0]))
     sig0 = std(log(ab[ab > 0]))
     def pln_func(x): 
-        return -pln_ll(ab, x[0], x[1], lower_trunc)
-    mu, sigma = optimize.fmin_bfgs(pln_func, x0 = [mu0, sig0], disp = 0)
+        return -pln_ll(ab, x[0], exp(x[1]), lower_trunc)
+    mu, logsigma = optimize.fmin_l_bfgs_b(pln_func, x0 = [mu0, log(sig0)], approx_grad = True, \
+                                          bounds = [(None, None), (log(10**-16), None)])[0]
+    sigma = exp(logsigma)
     return mu, sigma
 
 def logser_solver(ab):
@@ -581,18 +599,26 @@ def trunc_pareto_solver(x, lower_bound):
 
 def nbinom_lower_trunc_solver(ab):
     """Given abundance data, solve for MLE of negative binomial (lower-truncated at 1) parameters n and p"""
+    # NOTE: This solver can trapped in non-optimal parameter space because of rounding error.
+    # It appears to be less stable than the solver in R. 
     ab = check_for_support(ab, lower = 1)
     mu = np.mean(ab)
     var = np.var(ab, ddof = 1)
-    p0 = 1 - mu / var
-    if p0 < 0: p0 = 10**-5
-    elif p0 > 1: p0 = 1 - 10**-5
-    logit_p0 = logit(p0)
-    log_n0 = log(mu * (1 - p0) / p0)
+    p_start = [10**-5, 1 - 10**-5]
+    if mu/var < 1: p_start.append(1 - mu / var)
+    ll, pars = [], []
     def negbin_func(x):
-        return -nbinom_lower_trunc_ll(ab, exp(x[0]), expit(x[1]))
-    log_n, logit_p = optimize.fmin(negbin_func, x0 = [log_n0, logit_p0])
-    return exp(log_n), expit(logit_p)
+            return -nbinom_lower_trunc_ll(ab, exp(x[0]), expit(x[1]))    
+    for p0 in p_start:
+        logit_p0 = logit(p0)
+        log_n0 = log(mu * (1 - p0) / p0)
+        log_n, logit_p = optimize.fmin_l_bfgs_b(negbin_func, x0 = [log_n0, logit_p0], approx_grad=True, \
+                                                bounds = [(log(10**-16), None), (None, None)])[0] 
+        pars.append((exp(log_n), expit(logit_p)))
+        ll.append(-negbin_func([log_n, logit_p]))
+    ll_max, idx = max((ll_val, idx) for (idx, ll_val) in enumerate(ll))
+    n, p = pars[idx]
+    return n, p
 
 def dis_gamma_solver(ab):
     """Given abundance data, solve for MLE of discrete gamma parameters k and theta"""
