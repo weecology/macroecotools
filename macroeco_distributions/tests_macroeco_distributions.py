@@ -21,7 +21,7 @@ def check_dist(dist, x, p_known, pars):
     assert_almost_equals(p_rounded, float(p_known), places = 4)
 
 def test_multi_dists():
-    dat_dir = 'test_data.csv'
+    dat_dir = '.\test_data.csv'
     with open(dat_dir) as f:
         for line in f:
             line = line.strip('\n').split(',')
