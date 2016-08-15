@@ -12,8 +12,7 @@ dist_dic = {'pln': pln, 'trunc_logser': trunc_logser, 'trunc_expon': trunc_expon
 
 dist_solver_dic = {'pln': pln_solver, 'logser': logser_solver, 'trunc_logser': trunc_logser_solver, 
                    'trunc_geom': trunc_geom_solver, 'trunc_expon': trunc_expon_solver, 
-                   'trunc_pareto': trunc_pareto_solver, 'trunc_nbinom': nbinom_lower_trunc_solver, 
-                   'zipf': zipf_solver}
+                   'trunc_pareto': trunc_pareto_solver, 'zipf': zipf_solver}
 
 # Testing SAD data from BBS (5-year total for one route)
 # Parameter values obtained by using the solvers in macroeco_distributions ver. 4e5fc52
@@ -23,8 +22,7 @@ sad_1 = [109, 14, 4, 4, 680, 195, 13, 3, 123, 116, 1, 5, 105, 26, 14, 2, 9, 29, 
 
 sad_1_pars_dic = {'pln': (2.27027, 1.83484), 'logser': 0.99621, 'trunc_logser': 0.99621, 
                    'trunc_geom': 0.021218, 'trunc_expon': 0.021678, 
-                   'trunc_pareto': 0.38849, 'trunc_nbinom': (0.12298, 0.0054890), 
-                   'zipf': 1.32303}
+                   'trunc_pareto': 0.38849, 'zipf': 1.32303}
 
 sad_2 = [71, 27, 88, 21, 1, 2, 6, 2, 54, 3, 4, 33, 21, 12, 36, 29, 11, 14, 3, 3, 1, 10, 1, 28, 2, 119, 235, 
          23, 1, 30, 11, 1, 5, 1, 3, 1, 24, 73, 7, 11, 17, 327, 143, 35, 19, 4, 63, 18, 88, 10, 416, 124, 7, 5, 8, 
@@ -32,8 +30,7 @@ sad_2 = [71, 27, 88, 21, 1, 2, 6, 2, 54, 3, 4, 33, 21, 12, 36, 29, 11, 14, 3, 3,
 
 sad_2_pars_dic = {'pln': (2.2937, 1.8070), 'logser': 0.99571, 'trunc_logser': 0.99571, 
                    'trunc_geom': 0.023509, 'trunc_expon': 0.024075, 
-                   'trunc_pareto': 0.38769, 'trunc_nbinom': (0.17369, 0.0070226), 
-                   'zipf': 1.32247}
+                   'trunc_pareto': 0.38769, 'zipf': 1.32247}
 
 def check_dist(dist, x, p_known, pars):
     """Check the pmf/pdf or cdf of a distribution in macroeco_distribution.
