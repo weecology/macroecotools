@@ -6,7 +6,7 @@ except ImportError:
     from distutils.core import setup
 
 setup(name = 'macroecotools',
-      version= '0.3',
+      version= '0.4.0',
       description = 'Tools for conducting macroecological analyses',
       author = "Xiao Xiao, Ethan White and Katherine Thibault",
       url = 'https://github.com/weecology/macroecotools',
