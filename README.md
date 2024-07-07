@@ -1,5 +1,7 @@
-MacroEcoTools
+ARCHIVED: MacroEcoTools
 =============
+
+**This project is archived and no longer being developed or supported.**
 
 [![Build Status](https://travis-ci.org/weecology/macroecotools.png)](https://travis-ci.org/weecology/macroecotools)
 [![DOI](https://zenodo.org/badge/3532664.svg)](https://zenodo.org/badge/latestdoi/3532664)
